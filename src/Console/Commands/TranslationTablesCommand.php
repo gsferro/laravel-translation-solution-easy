@@ -38,7 +38,7 @@ class TranslationTablesCommand extends Command
         parent::__construct();
 
         $this->locale       = config('app.locale');
-        $this->langsSupport = config('laravellocalization.supportedLocales');
+        $this->langsSupport = array_keys(config('laravellocalization.supportedLocales'));
     }
 
     /**
@@ -54,10 +54,11 @@ class TranslationTablesCommand extends Command
         |---------------------------------------------------
         */
         if (count($this->langsSupport) == 0) {
+            $this->line("");
             return $this->error('Sorry, not language config in your application.');
         }
 
-        if (count($this->langsSupport) == 1 && array_key_exists($this->locale, $this->langsSupport)) {
+        if (count($this->langsSupport) == 1 && in_array($this->locale, $this->langsSupport)) {
             $this->info('Attention! The configured language is already in your application.');
             if ($this->confirm('Abortion the translation for you set up?!')) {
                 return $this->info('Okay. Abort this!');
@@ -73,11 +74,13 @@ class TranslationTablesCommand extends Command
             $table = $this->option('table') ?? $this->ask('What is table name?');
             // validação
             if ($this->tableDontExist($table)) {
+                $this->line("");
                 return $this->error("Oops, table [ {$table} ] not found.");
             }
 
             $column = $this->option('column') ?? $this->ask('What is column name?');
             if ($this->CollumnDontExist($table, $column)) {
+                $this->line("");
                 return $this->error("Oops, column [ {$column} ]  not found.");
             }
 
@@ -91,6 +94,7 @@ class TranslationTablesCommand extends Command
         */
         $tables = config('translationsolutioneasy.translate-tables');
         if (empty($tables)) {
+            $this->line("");
             return $this->error('Oops... Not tables and columns config in translationsolutioneasy.translate-tables.');
         }
 
@@ -115,6 +119,11 @@ class TranslationTablesCommand extends Command
 
     private function exec(array $tables)
     {
+        $this->line("");
+        $this->line("Language from locale app: [ {$this->locale} ]");
+        $this->line("");
+        $this->line("Languages that will be translated together: [ " . implode(" | ", $this->langsSupport) . " ]");
+        $this->line("");
         $this->line("Total of tables");
         $bar = $this->output->createProgressBar(count($tables));
 
@@ -148,7 +157,6 @@ class TranslationTablesCommand extends Command
     /**
      * @param array $column
      * @param $table
-     * @throws \Exception
      */
     private function translateAndPersist($column, $table)
     {
@@ -161,21 +169,21 @@ class TranslationTablesCommand extends Command
         $col = $this->output->createProgressBar(count($rows));
 
 
-        $translation = new ReversoTranslation($this->locale, array_keys($this->langsSupport));
+        $translation = new ReversoTranslation($this->locale, $this->langsSupport);
         collect($rows)->map(function ($row) use ($column, $translation, $col) {
             // translate
-            $trans = $translation->trans($row->$column);
+            $key   = $row->$column;
+            $trans = $translation->trans($key);
 
             if ($trans[ "success" ]) {
 
-                $key = TranslationSolutionEasy::key($column)->group();
-                if ($key->exists()) {
-                    $text = $key->first()->text;
+                $model = TranslationSolutionEasy::key($key)->group();
+                if ($model->exists()) {
+                    $text = $model->first()->text;
                 }
-
                 TranslationSolutionEasy::updateOrCreate([
                     'group' => '*',
-                    'key'   => $column,
+                    'key'   => $key,
                 ], [
                     'text' => array_merge($text ?? [], $trans[ "translate" ]),
                 ]);

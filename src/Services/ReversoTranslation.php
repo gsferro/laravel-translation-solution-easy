@@ -34,9 +34,14 @@ class ReversoTranslation
         $lans = [];
         if (is_array($langTo)) {
             foreach ($langTo as $to) {
+                if ($langFrom == $to) {
+                    continue;
+                }
+
                 if (is_null(reversoTranslationLangsConvert($to))) {
                     throw new Exception("langs [ {$to} ] from your translate not support!");
                 }
+
                 $lans[] = reversoTranslationLangsConvert($to);
             }
         }
@@ -116,6 +121,10 @@ class ReversoTranslation
      */
     private function api($langTo)
     {
+        if ($this->langFrom == $langTo) {
+            return $this->text;
+        }
+
         $curl = curl_init();
 
         curl_setopt_array($curl, array(
@@ -130,6 +139,7 @@ class ReversoTranslation
             CURLOPT_HTTPHEADER     => [
                 "cache-control: no-cache",
                 "content-type: application/json",
+                "content-encoding: gzip",
             ],
         ));
 

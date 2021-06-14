@@ -23,6 +23,7 @@ Uma solução completa para i18n que contempla as 3 etapas básicas:
     - `TODO` 
     1.  Informações digitadas pelo usuário 
         - Observer ou listener?
+    1.  Traduzir arquivos de langs usando command como é feito no banco    
         
     - `TODO LONG TERM`
         - Ao traduzir automaticamente, ter a opção de uma verificação interna (PF / time) e/ou de usuários do sistema
@@ -45,26 +46,21 @@ php artisan migrate [ --database=sqlite ] --path=database/migrations/translation
 ```
 
 ### Usando SQLite
-1. Criar arquivo `database/database.sqlite`
-    - `touch database/database.sqlite`
+1. Command para criar database
+    ```php
+    php artisan gsferro:translate-tables [--datatable=]
+    ```
+
+1. TODO mover para dentro do command    
     - Se atentar ao nome usado dentro de `config/database.php` caso queira mudar
-1. Adicione em `config/translationsolutioneasy`
-    - Connection => 'sqlite';
+    1. Adicione em `config/translationsolutioneasy`
+        - Connection => 'sqlite';
 
 ### Configurações
 1.  No arquivo base de html deve ser colocado assim:
 ```html
 <html lang="{{ strtolower(str_replace('_', '-', app()->getLocale())) }}">
 ```    
-1.  Alterar dentro de `config/app.php`
-    -'locale' => 'pt-br',
-    - fallback_locale => 'pt-br', 
-    - faker_locale => 'pt-br', 
-    - 'providers'
-       - comentar a linha
-           - `Illuminate\Translation\TranslationServiceProvider::class,`
-       - add a linha
-           - `Spatie\TranslationLoader\TranslationServiceProvider::class,`
 1.  Acesse `config/laravellocalization` e sete quais linguas sua app irá dar suporte
 
 1.  Encapsule as rotas em `web.php` ou `RouteServiceProvider@mapWebRoutes`
