@@ -2,7 +2,7 @@
     "name": "gsferro/translation-solution-easy",
     "license": "MIT",
     "tags" : ["Laravel", "Translation", "Solution", "Easy"],
-    "description": "Service para envio via queue easy no Laravel",
+    "description": "A complete solution for simple and efficient i18n for Laravel",
     "authors": [
         {
             "name": "Guilherme Ferro",
