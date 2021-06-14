@@ -52,7 +52,10 @@ php artisan migrate [ --database=sqlite ] --path=database/migrations/translation
     - Connection => 'sqlite';
 
 ### Configurações
-    
+1.  No arquivo base de html deve ser colocado assim:
+```html
+<html lang="{{ strtolower(str_replace('_', '-', app()->getLocale())) }}">
+```    
 1.  Alterar dentro de `config/app.php`
     -'locale' => 'pt-br',
     - fallback_locale => 'pt-br', 

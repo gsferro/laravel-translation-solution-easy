@@ -1,5 +1,5 @@
 @translationsolutioneasyCss()
-@php($transFlags = __('flags.'. LaravelLocalization::getCurrentLocale()))
+@php($transFlags = __('gsferro/translationsolutioneasy/lang::flags.'. LaravelLocalization::getCurrentLocale()))
 <li class="nav-item dropdown flags">
     <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownFlags" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
         <img src="{{ asset("/vendor/gsferro/translationsolutioneasy/flags/". LaravelLocalization::getCurrentLocale().".png") }}"
@@ -14,7 +14,7 @@
                     <img src="{{ asset("/vendor/gsferro/translationsolutioneasy/flags/{$localeCode}.png") }}"
                          alt="bandeira {{ $transFlags }}"
                     >
-                    {{  __('flags.' . $localeCode) }}
+                    {{  __('gsferro/translationsolutioneasy/lang::flags.' . $localeCode) }}
                 </a>
             @endif
         @endforeach
