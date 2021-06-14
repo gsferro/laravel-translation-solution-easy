@@ -17,16 +17,16 @@ Uma solução completa para i18n que contempla as 3 etapas básicas:
 1.  Gerenciamento do locate dentro da app pelo usuário
 
 1.  Tradução do banco de dados
-    1.  tbls de configuração
+    1.  Tbls de configuração
         - criação de um command para listar as tbls e salvar as traduções em banco
     
     - `TODO` 
-    1.  informações digitadas pelo usuário 
-        - observer ou listener?
+    1.  Informações digitadas pelo usuário 
+        - Observer ou listener?
         
     - `TODO LONG TERM`
-        - ao traduzir automaticamente, ter a opção de uma verificação interna (PF / time) e/ou de usuários do sistema
-        poderem sugerir melhores traduções.
+        - Ao traduzir automaticamente, ter a opção de uma verificação interna (PF / time) e/ou de usuários do sistema
+        Poderem sugerir melhores traduções.
     
 ### Dependências:
 
@@ -34,10 +34,11 @@ Uma solução completa para i18n que contempla as 3 etapas básicas:
 1.  https://github.com/mcamara/laravel-localization/
 
 ### Usando SQLite
-1. Criar arquivo `database/database.sqllite`
-    - se atentar ao nome usado dentro de `config/database.php` caso queira mudar
+1. Criar arquivo `database/database.sqlite`
+    - `touch database/database.sqlite`
+    - Se atentar ao nome usado dentro de `config/database.php` caso queira mudar
 1. Adicione em `config/translationsolutioneasy`
-    - connection => 'sqlite';
+    - Connection => 'sqlite';
 
 ### Instalação
 

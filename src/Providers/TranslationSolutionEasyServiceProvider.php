@@ -5,13 +5,13 @@ namespace Gsferro\TranslationSolutionEasy\Providers;
 use Gsferro\TranslationSolutionEasy\Console\Commands\TranslationTablesCommand;
 use Gsferro\TranslationSolutionEasy\Services\ReversoTranslation;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
+use Illuminate\Routing\Router;
 use Illuminate\Support\Facades\Blade;
 use Mcamara\LaravelLocalization\Middleware\LaravelLocalizationRedirectFilter;
 use Mcamara\LaravelLocalization\Middleware\LaravelLocalizationRoutes;
 use Mcamara\LaravelLocalization\Middleware\LaravelLocalizationViewPath;
 use Mcamara\LaravelLocalization\Middleware\LocaleCookieRedirect;
 use Mcamara\LaravelLocalization\Middleware\LocaleSessionRedirect;
-use Illuminate\Routing\Router;
 
 class TranslationSolutionEasyServiceProvider extends ServiceProvider
 {
@@ -57,13 +57,11 @@ class TranslationSolutionEasyServiceProvider extends ServiceProvider
         $this->app['router']->aliasMiddleware('localeCookieRedirect', LocaleCookieRedirect::class);
         $this->app['router']->aliasMiddleware('localeViewPath', LaravelLocalizationViewPath::class);*/
         $router = $this->app->make(Router::class);
-        $router->aliasMiddleware([
-            'localize'                => LaravelLocalizationRoutes::class,
-            'localizationRedirect'    => LaravelLocalizationRedirectFilter::class,
-            'localeSessionRedirect'   => LocaleSessionRedirect::class,
-            'localeCookieRedirect'    => LocaleCookieRedirect::class,
-            'localeViewPath'          => LaravelLocalizationViewPath::class
-        ]);
+        $router->aliasMiddleware('localize', LaravelLocalizationRoutes::class);
+        $router->aliasMiddleware('localizationRedirect', LaravelLocalizationRedirectFilter::class);
+        $router->aliasMiddleware('localeSessionRedirect', LocaleSessionRedirect::class);
+        $router->aliasMiddleware('localeCookieRedirect', LocaleCookieRedirect::class);
+        $router->aliasMiddleware('localeViewPath', LaravelLocalizationViewPath::class);
 
         /*
         |---------------------------------------------------
