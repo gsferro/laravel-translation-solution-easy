@@ -1,0 +1,20 @@
+/* Bandeiras */
+.flags {
+    display: block;
+    position: absolute;
+    top: 1px;
+    left: 45%;
+}
+.flags a {
+    display: flex;
+    justify-content: flex-start;
+    flex-direction: row;
+    align-content: stretch;
+    flex-wrap: wrap;
+    align-items: center;
+    text-decoration: none;
+}
+.flags a img {
+    width: 30px;
+    margin-right: 10px;
+}
