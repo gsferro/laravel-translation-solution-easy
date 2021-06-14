@@ -81,7 +81,7 @@ php artisan migrate [ --database=sqlite ] --path=database/migrations/translation
     Route::middleware('web')
          ->namespace($this->namespace)
          ->group(function (){
-            Route::prefix(LaravelLocalization::setLocale())
+            Route::prefix(\Mcamara\LaravelLocalization\Facades\LaravelLocalization::setLocale())
              ->middleware([ 'localeSessionRedirect', 'localizationRedirect', 'localeViewPath' ])
              ->group(base_path('routes/web.php'));         
     });
