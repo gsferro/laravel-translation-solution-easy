@@ -4,6 +4,7 @@ namespace Gsferro\TranslationSolutionEasy\Models;
 
 class TranslationSolutionEasy extends \Spatie\TranslationLoader\LanguageLine
 {
+    protected $table = "language_lines";
     public function __construct(array $attributes = [])
     {
         parent::__construct($attributes);

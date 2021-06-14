@@ -33,23 +33,23 @@ Uma solução completa para i18n que contempla as 3 etapas básicas:
 1.  https://github.com/spatie/laravel-translation-loader/tree/2.6.3
 1.  https://github.com/mcamara/laravel-localization/
 
-### Usando SQLite
-1. Criar arquivo `database/database.sqlite`
-    - `touch database/database.sqlite`
-    - Se atentar ao nome usado dentro de `config/database.php` caso queira mudar
-1. Adicione em `config/translationsolutioneasy`
-    - Connection => 'sqlite';
-
 ### Instalação
 
 ```php
 composer require gsferro/translation-solution-easy
 
 php artisan vendor:publish --provider="Mcamara\LaravelLocalization\LaravelLocalizationServiceProvider"
-php artisan vendor:publish --provider="Gsferro\TranslationSolutionEasy\Providers\TranslationSolutionEasyServiceProvider"
+php artisan vendor:publish --provider="Gsferro\TranslationSolutionEasy\Providers\TranslationSolutionEasyServiceProvider"  --force
 
 php artisan migrate [ --database=sqlite ] --path=database/migrations/translation
 ```
+
+### Usando SQLite
+1. Criar arquivo `database/database.sqlite`
+    - `touch database/database.sqlite`
+    - Se atentar ao nome usado dentro de `config/database.php` caso queira mudar
+1. Adicione em `config/translationsolutioneasy`
+    - Connection => 'sqlite';
 
 ### Configurações
     
@@ -102,11 +102,9 @@ php artisan migrate [ --database=sqlite ] --path=database/migrations/translation
 
 1.  Instale e execute o comando via artisan, passe os paramentros caso queira rodar somente em uma unica tabela
     ```php 
-    php artisan gsferro:install
-    
     php artisan list | grep gsferro
     
-    php artisan gsferro:translate-tables [--tbl|table= : Table name] [--col|column= : Collumn name]
+    php artisan gsferro:translate-tables [table= : Table name] [column= : Collumn name]
     ```
 
 ### Informações adicionais

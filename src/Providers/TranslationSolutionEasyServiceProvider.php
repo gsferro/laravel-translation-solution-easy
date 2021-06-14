@@ -51,11 +51,6 @@ class TranslationSolutionEasyServiceProvider extends ServiceProvider
         | Middleware package mcamara/laravel-localization
         |---------------------------------------------------
         */
-        /*$this->app['router']->aliasMiddleware('localize', LaravelLocalizationRoutes::class);
-        $this->app['router']->aliasMiddleware('localizationRedirect', LaravelLocalizationRedirectFilter::class);
-        $this->app['router']->aliasMiddleware('localeSessionRedirect', LocaleSessionRedirect::class);
-        $this->app['router']->aliasMiddleware('localeCookieRedirect', LocaleCookieRedirect::class);
-        $this->app['router']->aliasMiddleware('localeViewPath', LaravelLocalizationViewPath::class);*/
         $router = $this->app->make(Router::class);
         $router->aliasMiddleware('localize', LaravelLocalizationRoutes::class);
         $router->aliasMiddleware('localizationRedirect', LaravelLocalizationRedirectFilter::class);
@@ -74,10 +69,6 @@ class TranslationSolutionEasyServiceProvider extends ServiceProvider
             __DIR__ . '/../config/translation-loader.php'      => config_path('translation-loader.php'),
         ], 'config');
 
-        $this->publishes([
-            __DIR__.'/../migrations' => database_path('migrations')
-        ], 'migrations');
-
         if (! class_exists('CreateLanguageLinesTable')) {
             $timestamp = date('Y_m_d_His', time());
 
@@ -90,17 +81,17 @@ class TranslationSolutionEasyServiceProvider extends ServiceProvider
         $this->loadTranslationsFrom(__DIR__.'/../resouces/lang', 'gsferro/translationsolutioneasy/lang');
         $this->loadTranslationsFrom(__DIR__.'/../resouces/views', 'gsferro/translationsolutioneasy/flags');
         $this->publishes([
-            __DIR__ . '/../resouces/lang'  => resource_path('vendor/gsferro/translationsolutioneasy'),
-            __DIR__ . '/../resouces/views' => resource_path('vendor/gsferro/translationsolutioneasy'),
+            __DIR__ . '/../resouces/lang'  => resource_path('vendor/gsferro/translationsolutioneasy/lang'),
+            __DIR__ . '/../resouces/views' => resource_path('vendor/gsferro/translationsolutioneasy/views/flags'),
         ]);
 
         $this->publishes([
-            __DIR__ . '/../public' => public_path('vendor/translationsolutioneasy'),
+            __DIR__ . '/../public' => public_path('vendor/gsferro/translationsolutioneasy'),
         ]);
 
         Blade::directive("translationsolutioneasyCss", function(){
             return "<link href='/vendor/gsferro/translationsolutioneasy/css/flags.css' rel='stylesheet' type='text/css'/>";
         });
-        Blade::component("vendor.gsferro.translationsolutioneasy.flags", 'translationsolutioneasyFlags');
+        Blade::component("vendor.gsferro.translationsolutioneasy.views.flags", 'translationsolutioneasyFlags');
     }
 }
