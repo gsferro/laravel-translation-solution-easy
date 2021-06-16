@@ -259,8 +259,9 @@ class ConfigureSQLiteCommand extends Command
 
     protected function gitignoreStorage(): void
     {
-        if (!file_exists(storage_path('.gitignore'))) {
-            $ignore = fopen('.gitignore', 'w+');
+        $filename = storage_path('.gitignore');
+        if (!file_exists($filename)) {
+            $ignore = fopen($filename, 'w+');
             fwrite($ignore, "/vendor");
             fwrite($ignore, "!.gitignore");
             fclose($ignore);
