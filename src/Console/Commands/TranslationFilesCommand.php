@@ -9,14 +9,14 @@ use Illuminate\Config\Repository;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 
-class TranslationFoldersCommand extends Command
+class TranslationFilesCommand extends Command
 {
     /**
      * The name and signature of the console command.
      *
      * @var string
      */
-    protected $signature = 'gsferro:translate-files {--file= : file name}';
+    protected $signature = 'gsferro:translate-files {--file= : file name} {--lang= : Language}';
     /**
      * The console command description.
      *
@@ -69,6 +69,14 @@ class TranslationFoldersCommand extends Command
                 throw new Exception("Sorry, dont the folder language [ {$this->locale} ] config in your application.");
             }
 
+            // remover lang locale
+            $this->langsSupport = array_diff($this->langsSupport, [$this->locale]);
+
+            $lang = $this->option('lang');
+            if (!empty($lang) && in_array($lang, array_keys(config('laravellocalization.supportedLocales')))){
+                $this->langsSupport = [$lang];
+            }
+
             if (count($this->langsSupport) == 0) {
                 throw new Exception('Sorry, not language config in your application.');
             }
@@ -76,8 +84,6 @@ class TranslationFoldersCommand extends Command
             if (count($this->langsSupport) == 1 && in_array($this->locale, $this->langsSupport)) {
                 throw new Exception('Attention! The configured language is already in your application');
             }
-
-            // TODO remover lang locale ?
 
             /*
             |---------------------------------------------------
@@ -93,7 +99,7 @@ class TranslationFoldersCommand extends Command
         $this->comment("Language from locale app: [ {$this->locale} ]");
         $this->comment("Languages that will be translated together: [ " . implode(" | ", $this->langsSupport) . " ]");
 
-        if (!$this->confirm('Translate to all languages?', true)) {
+        if (count($this->langsSupport) > 1 && (!$lang) && !$this->confirm('Translate to all languages?', true)) {
             $langsSupport       = $this->choice("Translate into what languages", $this->langsSupport, null,
                 count($this->langsSupport), true);
             $this->langsSupport = (is_array($langsSupport) ? $langsSupport : [$langsSupport]);
