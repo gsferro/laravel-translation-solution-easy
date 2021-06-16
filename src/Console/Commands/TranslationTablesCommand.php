@@ -147,7 +147,7 @@ class TranslationTablesCommand extends Command
 
             $bar->finish();
             $this->line("");
-            $this->line("");
+            $this->comment("\7");
         } catch (\Exception $e) {
             DB::rollBack();
             $this->error("Oops.. {$e->getMessage()}");

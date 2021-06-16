@@ -39,7 +39,7 @@ class ConfigureSQLiteMigrateCommand extends Command
     public function handle()
     {
         if (!$this->confirm('Run migrate in your new configuration?!', true)) {
-            return $this->info('Okay. Not run migrate.');
+            return $this->comment('Okay. Not run migrate.');
         }
 
         $this->call('migrate', [
@@ -47,6 +47,7 @@ class ConfigureSQLiteMigrateCommand extends Command
             "--path"     => "database/migrations/translation"
         ]);
 
-        return $this->comment('Thanks for using me!');
+        $this->comment('Thanks for using me!');
+        $this->comment("\7");
     }
 }

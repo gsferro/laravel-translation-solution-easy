@@ -156,11 +156,16 @@ class ConfigureSQLiteCommand extends Command
             $this->call('config:clear');
             $this->publishConfiguration();
 
+            $this->comment('Then execute the command:');
+            $this->line('');
+            $this->comment('<fg=green;bg=white>php artisan gsferro:configure-sqlite-migrate');
+
         } catch (\Exception $e) {
             return $this->error($e->getMessage());
         }
 
-        return $this->comment('Thanks for using me!');
+        $this->comment("\7");
+        $this->comment('Thanks for using me!');
     }
 
     /**
@@ -218,17 +223,13 @@ class ConfigureSQLiteCommand extends Command
     {
         $ask    = 'What is database name?';
         $option = $this->option('database');
-        if ($reply) {
-            $this->error('Dont use sqlite from name!');
+        if ($reply === true) {
+            $this->error('Dont use sqlite from database name!');
             $ask = 'What is other database name?';
             unset($option);
         }
 
-        $name = $option ??
-            $this->askWithCompletion($ask, [
-                'translate-solution-easy',
-                'database'
-            ], 'database');
+        $name = $option ?? $this->ask($ask, 'database');
 
         if ($name == "sqlite") {
             return $this->nameDifSqlite(true);
