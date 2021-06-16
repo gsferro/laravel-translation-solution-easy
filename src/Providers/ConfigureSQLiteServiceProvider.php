@@ -2,25 +2,17 @@
 
 namespace Gsferro\TranslationSolutionEasy\Providers;
 
-use Gsferro\TranslationSolutionEasy\Console\Commands\ConfigureSQLiteCommand;
-use Gsferro\TranslationSolutionEasy\Console\Commands\TranslationTablesCommand;
-use Gsferro\TranslationSolutionEasy\Services\ReversoTranslation;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
-use Illuminate\Routing\Router;
 use Illuminate\Support\Arr;
-use Illuminate\Support\Facades\Blade;
-use Mcamara\LaravelLocalization\Middleware\LaravelLocalizationRedirectFilter;
-use Mcamara\LaravelLocalization\Middleware\LaravelLocalizationRoutes;
-use Mcamara\LaravelLocalization\Middleware\LaravelLocalizationViewPath;
-use Mcamara\LaravelLocalization\Middleware\LocaleCookieRedirect;
-use Mcamara\LaravelLocalization\Middleware\LocaleSessionRedirect;
 
 class ConfigureSQLiteServiceProvider extends ServiceProvider
 {
     public function register()
     {
-        $dirPckConfig = __DIR__.'/../config/temp';
+        $dirPckConfig = storage_path('app/config-sqlite');
+        dump($dirPckConfig);
         if (is_dir($dirPckConfig)) {
+            dump(1);
             /*
             |---------------------------------------------------
             | sobrescreve
@@ -29,7 +21,9 @@ class ConfigureSQLiteServiceProvider extends ServiceProvider
             $this->mergeConfigFrom("{$dirPckConfig}/database.php", 'database');
             $this->mergeConfigFrom("{$dirPckConfig}/translationsolutioneasy.php", 'translationsolutioneasy');
 
-            rmdir(__DIR__ . '/../config/temp');
+            //            Storage::delete(['config-sqlite/database.php', 'config-sqlite/translationsolutioneasy.php']);
+
+            $this->delTree($dirPckConfig);
         }
     }
 
@@ -38,44 +32,24 @@ class ConfigureSQLiteServiceProvider extends ServiceProvider
     /**
      * Merge the given configuration with the existing configuration.
      *
-     * @param  string  $path
-     * @param  string  $key
+     * @param string $path
+     * @param string $key
      * @return void
      */
     protected function mergeConfigFrom($path, $key)
     {
-        $config = $this->app['config']->get($key, []);
+        $config = $this->app[ 'config' ]->get($key, []);
 
-        $this->app['config']->set($key, $this->mergeConfig(require $path, $config));
+        $this->app[ 'config' ]->set($key, mergeConfig(require $path, $config));
     }
 
-    /**
-     * Merges the configs together and takes multi-dimensional arrays into account.
-     *
-     * @param  array  $original
-     * @param  array  $merging
-     * @return array
-     */
-    protected function mergeConfig(array $original, array $merging)
+
+    private function delTree($dir)
     {
-        $array = array_merge($merging, $original);
-
-        foreach ($original as $key => $value) {
-            if (! is_array($value)) {
-                continue;
-            }
-
-            if (! Arr::exists($merging, $key)) {
-                continue;
-            }
-
-            if (is_numeric($key)) {
-                continue;
-            }
-
-            $array[$key] = $this->mergeConfig($value, $merging[$key]);
+        $files = array_diff(scandir($dir), array('.', '..'));
+        foreach ($files as $file) {
+            (is_dir("$dir/$file")) ? $this->delTree("$dir/$file") : unlink("$dir/$file");
         }
-
-        return $array;
+        return rmdir($dir);
     }
 }

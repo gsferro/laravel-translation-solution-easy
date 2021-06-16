@@ -6,6 +6,7 @@ use Illuminate\Console\Command;
 use Illuminate\Http\File;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Storage;
 
 class ConfigureSQLiteCommand extends Command
 {
@@ -155,10 +156,8 @@ class ConfigureSQLiteCommand extends Command
             $this->comment('Preper merge with config/translationsolutioneasy.');
 
             $this->publishConfiguration();
-            // Reload the cached config
-            //            if (file_exists(App::getCachedConfigPath())) {
-            //                Artisan::call("config:cache");
-            //            }
+
+            $this->call('config:clear');
         } catch (\Exception $e) {
             return $this->error($e->getMessage());
         }
@@ -187,11 +186,11 @@ class ConfigureSQLiteCommand extends Command
         if (!$config) {
             return false;
         }
-        if (!is_dir($this->dirPckConfig."temp")) {
-            mkdir($this->dirPckConfig . "temp");
+        if (!is_dir($this->dirPckConfig."config-sqlite")) {
+            mkdir($this->dirPckConfig . "config-sqlite");
         }
 
-        file_put_contents($this->dirPckConfig."temp/{$key}.php", $this->transforme($newConfig));
+        Storage::put("config-sqlite/{$key}.php", $this->transforme($newConfig));
     }
 
     /**
@@ -266,14 +265,18 @@ class ConfigureSQLiteCommand extends Command
 
     private function publishConfiguration($forcePublish = true)
     {
+        //        php artisan vendor:publish --provider="Gsferro\TranslationSolutionEasy\Providers\TranslationSolutionEasyServiceProvider"  --force
         $params = [
+
             '--provider' => "Gsferro\TranslationSolutionEasy\Providers\ConfigureSQLiteServiceProvider",
             //            '--tag' => "config"
         ];
 
         if ($forcePublish === true) {
-            $params['--force'] = '';
+            $params['--force'] = "";
         }
+
+        //        dump($params);
 
         $this->call('vendor:publish', $params);
     }

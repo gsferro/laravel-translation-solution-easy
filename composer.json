@@ -18,7 +18,8 @@
             "Gsferro\\TranslationSolutionEasy\\": "src/"
         },
         "files": [
-            "src\\Helpers\\reversotranslation.php"
+            "src\\Helpers\\reversotranslation.php",
+            "src\\Helpers\\mergeConfig.php"
         ]
     },
     "extra": {
