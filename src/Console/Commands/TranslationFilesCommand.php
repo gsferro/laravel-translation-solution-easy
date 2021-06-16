@@ -144,7 +144,9 @@ class TranslationFilesCommand extends Command
      */
     private function getFiles()
     {
-        return array_diff(scandir($this->pathBaseLocale, 1), ['..', '.']);
+        $baseLocale = array_diff(scandir($this->pathBaseLocale, 1), ['..', '.']);
+        $base = file_exists("{$this->pathBase}/{$this->locale}.json") ? ["{$this->locale}.json"] : [];
+        return array_merge(["Todos"], $base, $baseLocale);
     }
 
     /**
@@ -232,7 +234,7 @@ class TranslationFilesCommand extends Command
      */
     private function fileNotExists($file)
     {
-        if (!file_exists("{$this->pathBaseLocale}/{$file}")) {
+        if (!file_exists("{$this->pathBaseLocale}/{$file}") || !file_exists("{$this->pathBase}/{$file}") ) {
             throw new Exception("Sorry, file [ {$file} ] dont exists.");
         }
     }
