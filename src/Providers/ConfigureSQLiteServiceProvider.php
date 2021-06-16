@@ -10,7 +10,9 @@ class ConfigureSQLiteServiceProvider extends ServiceProvider
     {
         $dirPckConfig = storage_path('vendor/gsferro/translation-solution-easy/config/sqlite');
         if (is_dir($dirPckConfig)) {
-            $this->mergeConfigFrom("{$dirPckConfig}/database.php", 'database.connections');
+            if (file_exists("{$dirPckConfig}/database.php")) {
+                $this->mergeConfigFrom("{$dirPckConfig}/database.php", 'database.connections');
+            }
             $this->mergeConfigFrom("{$dirPckConfig}/translationsolutioneasy.php", 'translationsolutioneasy');
         }
     }
