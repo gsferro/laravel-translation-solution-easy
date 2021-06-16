@@ -234,7 +234,7 @@ class TranslationFilesCommand extends Command
      */
     private function fileNotExists($file)
     {
-        if (!file_exists("{$this->pathBaseLocale}/{$file}") || !file_exists("{$this->pathBase}/{$file}") ) {
+        if (!file_exists("{$this->pathBaseLocale}/{$file}") && !file_exists("{$this->pathBase}/{$file}") ) {
             throw new Exception("Sorry, file [ {$file} ] dont exists.");
         }
     }
