@@ -38,12 +38,13 @@ class ConfigureSQLiteMigrateCommand extends Command
      */
     public function handle()
     {
-        if (!$this->confirm('Run migrate in your new configuration?!', true)) {
+        $config = config('translationsolutioneasy.connection-sqlite');
+        if (!$this->confirm("Run migrate in your new configuration [ {$config} ]?!", true)) {
             return $this->comment('Okay. Not run migrate.');
         }
 
         $this->call('migrate', [
-            "--database" => config('translationsolutioneasy.connection-sqlite'),
+            "--database" => $config,
             "--path"     => "database/migrations/translation"
         ]);
 
