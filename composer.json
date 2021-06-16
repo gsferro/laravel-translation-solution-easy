@@ -24,7 +24,8 @@
     "extra": {
         "laravel": {
             "providers": [
-                "Gsferro\\TranslationSolutionEasy\\Providers\\TranslationSolutionEasyServiceProvider"
+                "Gsferro\\TranslationSolutionEasy\\Providers\\TranslationSolutionEasyServiceProvider",
+                "Gsferro\\TranslationSolutionEasy\\Providers\\ConfigureSQLiteServiceProvider"
             ],
             "aliases": {
                 "TranslationSolutionEasy": "Gsferro\\TranslationSolutionEasy\\Facades\\TranslationSolutionEasyFacade",

@@ -88,11 +88,11 @@ class TranslationSolutionEasyServiceProvider extends ServiceProvider
         $this->publishes([
             __DIR__ . '/../resouces/lang'  => resource_path('lang/vendor/gsferro/translationsolutioneasy/lang'),
             __DIR__ . '/../resouces/views' => resource_path('views/vendor/gsferro/translationsolutioneasy/views/flags'),
-        ]);
+        ], 'resouces');
 
         $this->publishes([
             __DIR__ . '/../public' => public_path('vendor/gsferro/translationsolutioneasy'),
-        ]);
+        ], 'public');
 
         Blade::directive("translationsolutioneasyCss", function(){
             return "<link href='/vendor/gsferro/translationsolutioneasy/css/flags.css' rel='stylesheet' type='text/css'/>";
