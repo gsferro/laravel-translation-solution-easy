@@ -2,9 +2,8 @@
 
 namespace Gsferro\TranslationSolutionEasy\Console\Commands;
 
-use Exception;
 use Illuminate\Console\Command;
-use Illuminate\Contracts\Foundation\Application;
+use Illuminate\Http\File;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Artisan;
 
@@ -25,21 +24,21 @@ class ConfigureSQLiteCommand extends Command
 
     private $datatable;
     private $nameConfig;
+    private $dirPckConfig;
     private $configNameSqlite = null;
-    private $app;
 
     /**
      * Create a new command instance.
      *
-     * @param Application $app
+     * @return void
      */
-    public function __construct(Application $app)
+    public function __construct()
     {
         parent::__construct();
 
         $this->nameConfig = ":database-sqlite";
 
-        $this->app = $app ;
+        $this->dirPckConfig =  __DIR__ . "/../../config/";
     }
 
     /**
@@ -149,19 +148,18 @@ class ConfigureSQLiteCommand extends Command
             */
             if ($this->datatable != "database") {
                 $this->mergin('database');
-                $this->comment('Update config/database.');
+                $this->comment('Preper merge with config/database.');
             }
 
             $this->mergin('translationsolutioneasy');
-            $this->comment('Update config/translationsolutioneasy.');
+            $this->comment('Preper merge with config/translationsolutioneasy.');
 
-            /*
-            //Reload the cached config
-            if (file_exists(App::getCachedConfigPath())) {
-                Artisan::call("config:cache");
-            }
-            */
-        } catch (Exception $e) {
+            $this->publishConfiguration();
+            // Reload the cached config
+            //            if (file_exists(App::getCachedConfigPath())) {
+            //                Artisan::call("config:cache");
+            //            }
+        } catch (\Exception $e) {
             return $this->error($e->getMessage());
         }
 
@@ -170,9 +168,9 @@ class ConfigureSQLiteCommand extends Command
 
     private function mergin($key)
     {
-        $path = __DIR__ . "/../../config/sqlite-{$key}.php";
+        $path = $this->dirPckConfig . "sqlite-{$key}.php";
         if ($this->mergeConfigFrom($path, $key) === false) {
-            throw new Exception("$key dont exists in your configs!");
+            throw new \Exception("$key dont exists in your configs!");
         }
     }
 
@@ -185,14 +183,15 @@ class ConfigureSQLiteCommand extends Command
      */
     protected function mergeConfigFrom($newConfig, $key)
     {
-        $config = $this->app['config']->get($key, []);
+        $config = config($key);
         if (!$config) {
             return false;
         }
-        // ajusta a config com o database informado
-        $newConfig  = $this->transforme(require $newConfig);
+        if (!is_dir($this->dirPckConfig."temp")) {
+            mkdir($this->dirPckConfig . "temp");
+        }
 
-        $this->app['config']->set($key, $this->mergeConfig($newConfig, $config));
+        file_put_contents($this->dirPckConfig."temp/{$key}.php", $this->transforme($newConfig));
     }
 
     /**
@@ -226,20 +225,20 @@ class ConfigureSQLiteCommand extends Command
     }
 
     /**
-     * Recebe o array, transofrma em json para buscar usando replace e transformar
+     * Recebe o arquivo, replace com o nome da database
      *
-     * @param array $config
-     * @return array
+     * @param $newConfig
+     * @return
      */
-    private function transforme(array $config) : array
+    private function transforme($newConfig)
     {
-        return json_decode(
-            str_replace($this->nameConfig, $this->configNameSqlite ?? $this->datatable, json_encode($config))
-            , true);
+        return str_replace($this->nameConfig,
+            $this->configNameSqlite ?? $this->datatable,
+            file_get_contents($newConfig)
+        );
     }
 
     /**
-     * @param bool $reply
      * @return array|bool|mixed|string|null
      */
     private function nameDifSqlite($reply = false)
@@ -265,4 +264,17 @@ class ConfigureSQLiteCommand extends Command
         return $name;
     }
 
+    private function publishConfiguration($forcePublish = true)
+    {
+        $params = [
+            '--provider' => "Gsferro\TranslationSolutionEasy\Providers\ConfigureSQLiteServiceProvider",
+            //            '--tag' => "config"
+        ];
+
+        if ($forcePublish === true) {
+            $params['--force'] = '';
+        }
+
+        $this->call('vendor:publish', $params);
+    }
 }
