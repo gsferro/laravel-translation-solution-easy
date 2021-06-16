@@ -197,6 +197,8 @@ class ConfigureSQLiteCommand extends Command
         $storage_path = storage_path('vendor/gsferro/translation-solution-easy/config/sqlite');
         if (!is_dir($storage_path)) {
             mkdir($storage_path,0777,true);
+
+            $this->gitignoreStorage();
         }
 
         file_put_contents("{$storage_path}/{$key}.php", $this->transforme($newConfig));
@@ -253,5 +255,15 @@ class ConfigureSQLiteCommand extends Command
         }
 
         $this->call('vendor:publish', $params);
+    }
+
+    protected function gitignoreStorage(): void
+    {
+        if (!file_exists(storage_path('.gitignore'))) {
+            $ignore = fopen('.gitignore', 'w+');
+            fwrite($ignore, "/vendor");
+            fwrite($ignore, "!.gitignore");
+            fclose($ignore);
+        }
     }
 }
