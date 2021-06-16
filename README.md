@@ -59,9 +59,9 @@ php artisan vendor:publish --provider="Gsferro\TranslationSolutionEasy\Providers
 1.  Caso não Use SQLite: `php artisan migrate --path=database/migrations/translation` 
 
 1.  No arquivo base de html deve ser colocado:
-```html
-<html lang="{{ strtolower(str_replace('_', '-', app()->getLocale())) }}">
-```    
+    ```html
+    <html lang="{{ strtolower(str_replace('_', '-', app()->getLocale())) }}">
+    ```    
 1.  Acesse `config/laravellocalization` e sete quais linguas sua app irá dar suporte
 
 1.  Encapsule as rotas em `web.php` ou `RouteServiceProvider@mapWebRoutes`
