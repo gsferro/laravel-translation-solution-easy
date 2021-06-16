@@ -261,9 +261,9 @@ class ConfigureSQLiteCommand extends Command
     {
         $filename = storage_path('.gitignore');
         if (!file_exists($filename)) {
-            $ignore = fopen($filename, 'r');
-            fwrite($ignore, "/vendor");
-            fwrite($ignore, "!.gitignore");
+            $ignore = fopen($filename, 'w');
+            fwrite($ignore, "/vendor\n");
+            fwrite($ignore, "!.gitignore\n");
             fclose($ignore);
         }
     }
