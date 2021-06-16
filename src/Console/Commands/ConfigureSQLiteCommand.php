@@ -164,8 +164,8 @@ class ConfigureSQLiteCommand extends Command
             return $this->error($e->getMessage());
         }
 
-        $this->comment("\7");
         $this->comment('Thanks for using me!');
+        $this->comment("\7");
     }
 
     /**

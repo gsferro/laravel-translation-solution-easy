@@ -16,7 +16,7 @@ class TranslationTablesCommand extends Command
      *
      * @var string
      */
-    protected $signature = 'gsferro:translate-tables {--tbl|table= : Table name} {--col|column= : Collumn name}';
+    protected $signature = 'gsferro:translate-tables {--table= : Table name} {--column= : Collumn name}';
     /**
      * The console command description.
      *
@@ -147,10 +147,11 @@ class TranslationTablesCommand extends Command
 
             $bar->finish();
             $this->line("");
+            $this->comment('Thanks for using me!');
             $this->comment("\7");
         } catch (\Exception $e) {
             DB::rollBack();
-            $this->error("Oops.. {$e->getMessage()}");
+            $this->error("Oops... {$e->getMessage()}");
         }
     }
 

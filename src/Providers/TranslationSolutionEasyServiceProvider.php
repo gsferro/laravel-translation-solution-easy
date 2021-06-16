@@ -4,6 +4,7 @@ namespace Gsferro\TranslationSolutionEasy\Providers;
 
 use Gsferro\TranslationSolutionEasy\Console\Commands\ConfigureSQLiteCommand;
 use Gsferro\TranslationSolutionEasy\Console\Commands\ConfigureSQLiteMigrateCommand;
+use Gsferro\TranslationSolutionEasy\Console\Commands\TranslationFoldersCommand;
 use Gsferro\TranslationSolutionEasy\Console\Commands\TranslationTablesCommand;
 use Gsferro\TranslationSolutionEasy\Services\ReversoTranslation;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
@@ -48,6 +49,7 @@ class TranslationSolutionEasyServiceProvider extends ServiceProvider
             // publicando os demais pacotes
             $this->commands([
                 TranslationTablesCommand::class,
+                TranslationFoldersCommand::class,
                 ConfigureSQLiteCommand::class,
                 ConfigureSQLiteMigrateCommand::class,
             ]);
