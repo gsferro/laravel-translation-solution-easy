@@ -2,6 +2,7 @@
 
 namespace Gsferro\TranslationSolutionEasy\Console\Commands;
 
+use Exception;
 use Gsferro\TranslationSolutionEasy\Models\TranslationSolutionEasy;
 use Gsferro\TranslationSolutionEasy\Services\ReversoTranslation;
 use Illuminate\Config\Repository;
@@ -55,18 +56,18 @@ class TranslationFoldersCommand extends Command
         */
 
         if (!is_dir($this->pathBaseLocale)) {
-            return $this->error('Sorry, dont the folder language config in your application.');
+            return $this->comment('Sorry, dont the folder language config in your application.');
         }
 
         if (count($this->langsSupport) == 0) {
             $this->line("");
-            return $this->error('Sorry, not language config in your application.');
+            return $this->comment('Sorry, not language config in your application.');
         }
 
         if (count($this->langsSupport) == 1 && in_array($this->locale, $this->langsSupport)) {
             $this->info('Attention! The configured language is already in your application.');
             if ($this->confirm('Abortion the translation for you set up?!')) {
-                return $this->error('Okay. Abort this!');
+                return $this->comment('Okay. Abort this!');
             }
         }
     }
@@ -83,39 +84,14 @@ class TranslationFoldersCommand extends Command
         | Caso passe algum paramentro
         |---------------------------------------------------
         */
+        try {
+            $folders = $this->optionFolder();
+            $files   = $this->optionFile($folders);
 
-        $folders = $this->option('folder') ??
-                  $this->choice("What is the translation folder?!", $this->getFolders(), null, null, true);
-
-        // validação
-        if (is_array($folders)) {
-            foreach ($folders as $folder) {
-                if (!is_dir("{$this->pathBaseLocale}/$folder}")) {
-                    $this->line("");
-                    return $this->error("Sorry, folder [ {$folder} ] dont exists.");
-                }
-            }
-        } elseif (!is_dir("{$this->pathBaseLocale}/$folders}")) {
-            $this->line("");
-            return $this->error("Sorry, folder [ {$folders} ] dont exists.");
+        } catch (Exception $e) {
+            return $this->error($e->getMessage());
         }
 
-        $files = $this->option('file') ??
-                $this->choice("What is the translation file?!", $this->getFiles($folders), null, null, true);
-
-        // validação
-        if (is_array($files)) {
-            foreach ($files as $file) {
-                if (!file_exists("{$this->pathBaseLocale}/$folders}/{$file}")) {
-                    $this->line("");
-                    return $this->error("Sorry, file [ {$file} ] in folder [ {$folders} ] dont exists.");
-                }
-            }
-        } elseif (!file_exists("{$this->pathBaseLocale}/$folders}/{$files}")) {
-            $this->line("");
-            return $this->error("Sorry, file [ {$files} ] in folder [ {$folders} ] dont exists.");
-        }
-        
         // exibindo linguas
         $this->comment("Language from locale app: [ {$this->locale} ]");
         $this->comment("Languages that will be translated together: [ " . implode(" | ", $this->langsSupport) . " ]");
@@ -129,6 +105,10 @@ class TranslationFoldersCommand extends Command
         return $this->exec($folders, $files);
     }
 
+    /**
+     * @param array $folders
+     * @param array $files
+     */
     private function exec(array $folders, array $files)
     {
         $this->line("");
@@ -138,21 +118,7 @@ class TranslationFoldersCommand extends Command
 
         try {
             foreach ($this->langsSupport as $lang) {
-                $this->comment("Total of folders:");
-                $foldersBar = $this->output->createProgressBar(count($folders));
-                $foldersBar->start();
-                foreach ($folders as $folder) {
-                    $this->comment("Total of files:");
-                    $filesBar = $this->output->createProgressBar(count($folders));
-                    $filesBar->start();
-                    foreach ($files as $file) {
-                        $this->translate("{$this->pathBaseLocale}/{$folder}/{$file}", $lang, "{$folder}.{$file}");
-                        $filesBar->advance();
-                    }
-                    $filesBar->finish();
-                    $foldersBar->advance();
-                }
-                $foldersBar->finish();
+                $this->execInFolders($folders, $files, $lang);
                 $langsBar->advance();
             }
             $langsBar->finish();
@@ -160,7 +126,7 @@ class TranslationFoldersCommand extends Command
             $this->line("");
             $this->comment('Thanks for using me!');
             $this->comment("\7");
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $this->error("Oops... {$e->getMessage()}");
         }
     }
@@ -169,7 +135,7 @@ class TranslationFoldersCommand extends Command
      * @param $original
      * @param $lang
      * @param $group
-     * @throws \Exception
+     * @throws Exception
      */
     private function translate($original, $lang, $group)
     {
@@ -206,14 +172,120 @@ class TranslationFoldersCommand extends Command
         $this->line("");
     }
 
+    /**
+     * @return array|false
+     */
     private function getFolders()
     {
         return $paths = scandir($this->pathBaseLocale, 1);
     }
 
+    /**
+     * @param $path
+     * @return array|false
+     */
     private function getFiles($path)
     {
         return $folders = scandir("{$this->pathBaseLocale}/{$path}", 1);
     }
 
+    /**
+     * @param array $folders
+     * @param array $files
+     * @param $lang
+     * @throws Exception
+     */
+    private function execInFolders(array $folders, array $files, $lang)
+    {
+        $this->comment("Total of folders:");
+        $foldersBar = $this->output->createProgressBar(count($folders));
+        $foldersBar->start();
+        foreach ($folders as $folder) {
+            $this->execInFiles($files, $lang, $folder);
+            $foldersBar->advance();
+        }
+        $foldersBar->finish();
+    }
+
+    /**
+     * @param array $files
+     * @param $lang
+     * @param $folder
+     * @throws Exception
+     */
+    private function execInFiles(
+        array $files,
+        $lang,
+        $folder
+    ) {
+        $this->comment("Total of files:");
+        $filesBar = $this->output->createProgressBar(count($files));
+        $filesBar->start();
+        foreach ($files as $file) {
+            $this->translate("{$this->pathBaseLocale}/{$folder}/{$file}", $lang, "{$folder}.{$file}");
+            $filesBar->advance();
+        }
+        $filesBar->finish();
+    }
+
+    /**
+     * @return array|bool|string|null
+     * @throws Exception
+     */
+    private function optionFolder()
+    {
+        $folders = $this->option('folder') ??
+            $this->choice("What is the translation folder?!", $this->getFolders(), null, null, true);// validação
+        if (is_array($folders)) {
+            foreach ($folders as $folder) {
+                $this->folderNotExists($folder);
+            }
+        } else {
+            $this->folderNotExists($folders);
+        }
+        return $folders;
+    }
+
+    /**
+     * @param $folders
+     * @return array|bool|string|null
+     * @throws Exception
+     */
+    private function optionFile($folders)
+    {
+        $files = $this->option('file') ??
+            $this->choice("What is the translation file?!", $this->getFiles($folders), null, null,
+                true);// validação
+        if (is_array($files)) {
+            foreach ($files as $file) {
+                $this->fileNotExists($folders, $file);
+            }
+        } else {
+            $this->fileNotExists($folders, $files);
+        }
+        return $files;
+    }
+
+    /**
+     * @param $folders
+     * @param $file
+     * @throws Exception
+     */
+    private function fileNotExists($folders, $file)
+    {
+        if (!file_exists("{$this->pathBaseLocale}/$folders}/{$file}")) {
+            throw new Exception("Sorry, file [ {$file} ] in folder [ {$folders} ] dont exists.");
+        }
+    }
+
+    /**
+     * @param $folder
+     * @throws Exception
+     */
+    private function folderNotExists($folder)
+    {
+        if (!is_dir("{$this->pathBaseLocale}/$folder}")) {
+            throw new Exception("Sorry, folder [ {$folder} ] dont exists.");
+        }
+    }
 }
