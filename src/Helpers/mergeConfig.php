@@ -13,7 +13,6 @@ if (!function_exists('mergeConfig')) {
     function mergeConfig(array $original, array $merging)
     {
         $array = array_merge($merging, $original);
-        dump($array);
 
         foreach ($original as $key => $value) {
             if (!is_array($value)) {

@@ -3,9 +3,7 @@
 namespace Gsferro\TranslationSolutionEasy\Console\Commands;
 
 use Illuminate\Console\Command;
-use Illuminate\Http\File;
 use Illuminate\Support\Arr;
-use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Storage;
 
 class ConfigureSQLiteCommand extends Command
@@ -39,7 +37,7 @@ class ConfigureSQLiteCommand extends Command
 
         $this->nameConfig = ":database-sqlite";
 
-        $this->dirPckConfig =  __DIR__ . "/../../config/";
+        $this->dirPckConfig =  __DIR__ . "/../../config";
     }
 
     /**
@@ -155,9 +153,9 @@ class ConfigureSQLiteCommand extends Command
             $this->mergin('translationsolutioneasy');
             $this->comment('Preper merge with config/translationsolutioneasy.');
 
+            $this->call('config:clear');
             $this->publishConfiguration();
 
-            $this->call('config:clear');
         } catch (\Exception $e) {
             return $this->error($e->getMessage());
         }
@@ -165,9 +163,13 @@ class ConfigureSQLiteCommand extends Command
         return $this->comment('Thanks for using me!');
     }
 
+    /**
+     * @param $key
+     * @throws \Exception
+     */
     private function mergin($key)
     {
-        $path = $this->dirPckConfig . "sqlite-{$key}.php";
+        $path = $this->dirPckConfig . "/stubs/{$key}.php";
         if ($this->mergeConfigFrom($path, $key) === false) {
             throw new \Exception("$key dont exists in your configs!");
         }
@@ -186,48 +188,20 @@ class ConfigureSQLiteCommand extends Command
         if (!$config) {
             return false;
         }
-        if (!is_dir($this->dirPckConfig."config-sqlite")) {
-            mkdir($this->dirPckConfig . "config-sqlite");
+
+        $storage_path = storage_path('vendor/gsferro/translation-solution-easy/config/sqlite');
+        if (!is_dir($storage_path)) {
+            mkdir($storage_path,0777,true);
         }
 
-        Storage::put("config-sqlite/{$key}.php", $this->transforme($newConfig));
-    }
-
-    /**
-     * Merges the configs together and takes multi-dimensional arrays into account.
-     *
-     * @param  array  $original
-     * @param  array  $merging
-     * @return array
-     */
-    protected function mergeConfig(array $original, array $merging)
-    {
-        $array = array_merge($merging, $original);
-
-        foreach ($original as $key => $value) {
-            if (! is_array($value)) {
-                continue;
-            }
-
-            if (! Arr::exists($merging, $key)) {
-                continue;
-            }
-
-            if (is_numeric($key)) {
-                continue;
-            }
-
-            $array[$key] = $this->mergeConfig($value, $merging[$key]);
-        }
-
-        return $array;
+        file_put_contents("{$storage_path}/{$key}.php", $this->transforme($newConfig));
     }
 
     /**
      * Recebe o arquivo, replace com o nome da database
      *
      * @param $newConfig
-     * @return
+     * @return string|string[]
      */
     private function transforme($newConfig)
     {
@@ -263,20 +237,19 @@ class ConfigureSQLiteCommand extends Command
         return $name;
     }
 
+    /**
+     * Publica a nova config chamando o SP desse comando
+     * @param bool $forcePublish
+     */
     private function publishConfiguration($forcePublish = true)
     {
-        //        php artisan vendor:publish --provider="Gsferro\TranslationSolutionEasy\Providers\TranslationSolutionEasyServiceProvider"  --force
         $params = [
-
             '--provider' => "Gsferro\TranslationSolutionEasy\Providers\ConfigureSQLiteServiceProvider",
-            //            '--tag' => "config"
         ];
 
         if ($forcePublish === true) {
-            $params['--force'] = "";
+            $params[ '--force' ] = "";
         }
-
-        //        dump($params);
 
         $this->call('vendor:publish', $params);
     }

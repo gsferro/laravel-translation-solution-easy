@@ -9,7 +9,9 @@ class TranslationSolutionEasy extends \Spatie\TranslationLoader\LanguageLine
     {
         parent::__construct($attributes);
 
-        if (config('translationsolutioneasy.connection') != null) {
+        if (!empty(config('translationsolutioneasy.connection-sqlite'))) {
+            $this->setConnection(config('translationsolutioneasy.connection-sqlite'));
+        } elseif (config('translationsolutioneasy.connection') != null) {
             $this->setConnection(config('translationsolutioneasy.connection'));
         }
     }

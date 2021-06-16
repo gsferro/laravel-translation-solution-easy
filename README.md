@@ -14,16 +14,18 @@ Uma solução completa para i18n que contempla as 3 etapas básicas:
     * obs : O mais trabalhoso quando o projeto já esta em curso
     * obs2: O mais fácil quando o projeto nasce com essa filosofia / RNF
         
-1.  Gerenciamento do locate dentro da app pelo usuário
+1.  Gerenciamento do locate dentro da app pelo usuário na url
 
 1.  Tradução do banco de dados
-    1.  Tbls de configuração
-        - criação de um command para listar as tbls e salvar as traduções em banco
+    1.  Sessão: Use SQLite, configurando de forma simples com alguns passos rodando 
+        - `php artisan gsferro:configure-sqlite` 
+    1.  Sessão: Tradução do Banco, Tabelas de configuração traduzidas tanto única quanto múltiplas em `config/translationsolutioneasy`.
+        - `php artisan gsferro:translate-tables`
     
     - `TODO` 
+    1.  Traduzir arquivos de langs usando command como é feito no banco    
     1.  Informações digitadas pelo usuário 
         - Observer ou listener?
-    1.  Traduzir arquivos de langs usando command como é feito no banco    
         
     - `TODO LONG TERM`
         - Ao traduzir automaticamente, ter a opção de uma verificação interna (PF / time) e/ou de usuários do sistema
@@ -34,30 +36,29 @@ Uma solução completa para i18n que contempla as 3 etapas básicas:
 1.  https://github.com/spatie/laravel-translation-loader/tree/2.6.3
 1.  https://github.com/mcamara/laravel-localization/
 
+### Versões
+| Package | Laravel |
+| ------ | ------ |
+| ~1.* | 5.8 |
+ 
+
 ### Instalação
 
 ```php
 composer require gsferro/translation-solution-easy
 
 php artisan vendor:publish --provider="Mcamara\LaravelLocalization\LaravelLocalizationServiceProvider"
-php artisan vendor:publish --provider="Gsferro\TranslationSolutionEasy\Providers\TranslationSolutionEasyServiceProvider"  --force
+php artisan vendor:publish --provider="Gsferro\TranslationSolutionEasy\Providers\TranslationSolutionEasyServiceProvider" --force
 
-php artisan migrate [ --database=sqlite ] --path=database/migrations/translation
 ```
+* Faz `mergeConfigFrom` no ServiceProvider colocando o locale de `app.php` como `pt-br` 
+* ###### TODO trocar configuração via command 
 
-### Usando SQLite
-1. Command para criar database
-    ```php
-    php artisan gsferro:translate-tables [--datatable=]
-    ```
+### Configurações de uso
 
-1. TODO mover para dentro do command    
-    - Se atentar ao nome usado dentro de `config/database.php` caso queira mudar
-    1. Adicione em `config/translationsolutioneasy`
-        - Connection => 'sqlite';
+1.  Caso não Use SQLite: `php artisan migrate --path=database/migrations/translation` 
 
-### Configurações
-1.  No arquivo base de html deve ser colocado assim:
+1.  No arquivo base de html deve ser colocado:
 ```html
 <html lang="{{ strtolower(str_replace('_', '-', app()->getLocale())) }}">
 ```    
@@ -85,27 +86,38 @@ php artisan migrate [ --database=sqlite ] --path=database/migrations/translation
 
 1.  Inclua a seleção para troca de idiomas
     - `@translationsolutioneasyFlags()`
-    - ele precisa estar encapsulado pela tag ul
-    - talvez seja necessário ajustar o flags.css dependendo de onde for colocado 
+    - Ele precisa estar encapsulado pela tag `<ul>`
+    - Talvez seja necessário ajustar o flags.css dependendo de onde for colocado 
     
+### Use SQLite
+1. Command para criar database
+    ```php
+    php artisan gsferro:configure-sqlite {--database= : Database name}
+    ```
+- Faz `mergeConfigFrom` no ServiceProvider mesclando a nova config em `config/database` e `config/translationsolutioneasy`
+1. Migrate
+    ```php
+    php artisan gsferro:configure-sqlite-migrate
+    ```
+- Caso queria deixar de usar o SQLite para usar outro SGBD, excluir arquivos de `vendor/gsferro/translation-solution-easy/config/sqlite`
+* ###### TODO remover configuração via command 
+
 ### Tradução do Banco
 
-1.  Coloque em `config/translationsolutioneasy.translate-tables` as tabelas com os campos que deseja traduzir
+1.  Coloque em `config/translationsolutioneasy.translate-tables` as tabelas com os campos que deseja manter/traduzir
     - ex:
     ```php
     'translate-tables' => [
         'table1' => 'collumn0', 
+        // ou
         'table2' => ['collumn1', 'collumn2', ...]
     ],
     ```
 
-1.  Instale e execute o comando via artisan, passe os paramentros caso queira rodar somente em uma unica tabela
+1.  Execute o comando via artisan, passe os paramentros caso queira rodar somente em uma única tabela
     ```php 
-    php artisan list | grep gsferro
-    
-    php artisan gsferro:translate-tables [table= : Table name] [column= : Collumn name]
+    php artisan gsferro:translate-tables [--table= : Table name] [--column= : Collumn name]
     ```
-
 ### Informações adicionais
 * Cache das rotas:
     - https://github.com/mcamara/laravel-localization#caching-routes
