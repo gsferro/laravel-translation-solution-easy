@@ -21,15 +21,15 @@ Uma solução completa para i18n que contempla as 3 etapas básicas:
         - `php artisan gsferro:configure-sqlite` 
     1.  Sessão: Tradução do Banco, Tabelas de configuração traduzidas tanto única quanto múltiplas em `config/translationsolutioneasy`.
         - `php artisan gsferro:translate-tables`
+    1.  Traduzir arquivos de langs usando command como é feito no banco    
+        - `php artisan gsferro:translate-files`
     
     - `TODO` 
-    1.  Traduzir arquivos de langs usando command como é feito no banco    
-    1.  Informações digitadas pelo usuário 
-        - Observer ou listener?
+        1.  Informações digitadas pelo usuário 
+            - Observer ou listener?
         
     - `TODO LONG TERM`
-        - Ao traduzir automaticamente, ter a opção de uma verificação interna (PF / time) e/ou de usuários do sistema
-        Poderem sugerir melhores traduções.
+        - Ao traduzir automaticamente, ter a opção de uma verificação interna (PF / time) e/ou de usuários do sistema Poderem sugerir melhores traduções.
     
 ### Dependências:
 
@@ -118,6 +118,14 @@ php artisan vendor:publish --provider="Gsferro\TranslationSolutionEasy\Providers
     ```php 
     php artisan gsferro:translate-tables [--table= : Table name] [--column= : Collumn name]
     ```
+    
+### Tradução dos arquivos
+
+1.  Execute o comando via artisan, passe os paramentros caso queira rodar somente em um único arquivo ou lang 
+    ```php 
+    php artisan gsferro:translate-files [--file= : File name] [--lang= : Language]
+    ```
+    
 ### Informações adicionais
 * Cache das rotas:
     - https://github.com/mcamara/laravel-localization#caching-routes
