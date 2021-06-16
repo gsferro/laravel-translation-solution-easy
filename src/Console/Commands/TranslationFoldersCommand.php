@@ -89,7 +89,7 @@ class TranslationFoldersCommand extends Command
             $files   = $this->optionFile($folders);
 
         } catch (Exception $e) {
-            return $this->error($e->getMessage());
+            return $this->comment($e->getMessage());
         }
 
         // exibindo linguas
@@ -127,7 +127,7 @@ class TranslationFoldersCommand extends Command
             $this->comment('Thanks for using me!');
             $this->comment("\7");
         } catch (Exception $e) {
-            $this->error("Oops... {$e->getMessage()}");
+            $this->comment("Oops... {$e->getMessage()}");
         }
     }
 
