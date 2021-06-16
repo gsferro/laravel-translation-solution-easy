@@ -35,6 +35,8 @@ class TranslationFilesCommand extends Command
      * @var string
      */
     private $pathBaseLocale;
+    /** * @var array */
+    private $files;
 
     /**
      * Create a new command instance.
@@ -64,7 +66,6 @@ class TranslationFilesCommand extends Command
             | validation
             |---------------------------------------------------
             */
-
             if (!is_dir($this->pathBaseLocale)) {
                 throw new Exception("Sorry, dont the folder language [ {$this->locale} ] config in your application.");
             }
@@ -72,8 +73,9 @@ class TranslationFilesCommand extends Command
             // remover lang locale
             $this->langsSupport = array_diff($this->langsSupport, [$this->locale]);
 
+            // get options lang
             $lang = $this->option('lang');
-            if (!empty($lang) && in_array($lang, array_keys(config('laravellocalization.supportedLocales')))){
+            if (!empty($lang) && in_array($lang, array_keys(config('laravellocalization.supportedLocales')))) {
                 $this->langsSupport = [$lang];
             }
 
@@ -85,12 +87,8 @@ class TranslationFilesCommand extends Command
                 throw new Exception('Attention! The configured language is already in your application');
             }
 
-            /*
-            |---------------------------------------------------
-            | Caso passe algum paramentro
-            |---------------------------------------------------
-            */
-            $files = $this->optionFile();
+            // get options files
+            $this->optionFile();
         } catch (Exception $e) {
             return $this->comment($e->getMessage());
         }
@@ -99,20 +97,25 @@ class TranslationFilesCommand extends Command
         $this->comment("Language from locale app: [ {$this->locale} ]");
         $this->comment("Languages that will be translated together: [ " . implode(" | ", $this->langsSupport) . " ]");
 
-        if (count($this->langsSupport) > 1 && (!$lang) && !$this->confirm('Translate to all languages?', true)) {
-            $langsSupport       = $this->choice("Translate into what languages", $this->langsSupport, null,
-                count($this->langsSupport), true);
+        if ((
+                count($this->langsSupport) > 1) &&
+            (!$lang) &&
+            (!$this->confirm('Translate to all languages?', true))
+        ) {
+            $langsSupport       = $this->choice("Translate into what languages",
+                $this->langsSupport,
+                null,
+                count($this->langsSupport),
+                true
+            );
             $this->langsSupport = (is_array($langsSupport) ? $langsSupport : [$langsSupport]);
         }
 
         // executando tradução
-        return $this->exec($files);
+        return $this->exec();
     }
 
-    /**
-     * @param array $files
-     */
-    private function exec(array $files)
+    private function exec()
     {
         $this->line("");
         $this->line("Total of Languages:");
@@ -122,7 +125,7 @@ class TranslationFilesCommand extends Command
         try {
             DB::beginTransaction();
             foreach ($this->langsSupport as $lang) {
-                $this->execInFiles($files, $lang);
+                $this->execInFiles($lang);
                 $langsBar->advance();
             }
             DB::commit();
@@ -142,31 +145,38 @@ class TranslationFilesCommand extends Command
     /**
      * @return array|false
      */
-    private function getFiles()
+    private function getFiles($incluirTodos = true)
     {
         $baseLocale = array_diff(scandir($this->pathBaseLocale, 1), ['..', '.']);
-        $base = file_exists("{$this->pathBase}/{$this->locale}.json") ? ["{$this->locale}.json"] : [];
-        return array_merge(["Todos"], $base, $baseLocale);
+        $base       = file_exists("{$this->pathBase}/{$this->locale}.json") ? ["{$this->locale}.json"] : [];
+        $todos      = $incluirTodos ? ["Todos"] : [];
+
+        return array_merge($todos, $base, $baseLocale);
     }
 
     /**
-     * @param array $files
      * @param $lang
      * @throws Exception
      */
-    private function execInFiles(
-        array $files,
-        $lang
-    ) {
+    private function execInFiles($lang)
+    {
         $this->line('');
         $this->line('');
         $this->comment("Total of files in lang [ {$lang} ]:");
-        $filesBar = $this->output->createProgressBar(count($files));
+        $filesBar = $this->output->createProgressBar(count($this->files));
         $filesBar->start();
-        foreach ($files as $file) {
-            $this->translate("{$this->pathBaseLocale}/{$file}", $lang, current(explode('.', $file)));
+
+        foreach ($this->files as $file) {
+            $original = (str_contains($file, ".json")
+                ? "{$this->pathBase}/{$file}"
+                : "{$this->pathBaseLocale}/{$file}");
+
+            $fileName = current(explode('.', $file));
+            $this->translate("{$original}", $lang, $fileName);
+
             $filesBar->advance();
         }
+
         $filesBar->finish();
         $this->line("");
         $this->comment("Finish files the lang [ {$lang} ]");
@@ -181,7 +191,9 @@ class TranslationFilesCommand extends Command
     private function translate($original, $lang, $file)
     {
         // busca os dados
-        $rows = require $original;
+        $rows = (($file == $this->locale)
+            ? json_decode(file_get_contents($original), true)
+            : require $original);
 
         $this->line("");
         $this->line("");
@@ -189,9 +201,10 @@ class TranslationFilesCommand extends Command
         $max = count($rows, COUNT_RECURSIVE);
         $col = $this->output->createProgressBar($max);
 
+        // inicia service de tradução
         $translation = new ReversoTranslation($this->locale, $lang);
 
-        $group = "{$file}";
+        $group = ($file == $this->locale ? "*" : "{$file}");
         foreach ($rows as $key => $line) {
             $col->advance();
             if (is_array($line)) {
@@ -215,9 +228,20 @@ class TranslationFilesCommand extends Command
     private function optionFile()
     {
         $files = $this->option('file') ??
-            $this->choice("What is the translation file", $this->getFiles(), null, count($this->getFiles()),
-                true);// validação
+            $this->choice("What is the translation file",
+                $this->getFiles(),
+                0,
+                count($this->getFiles()),
+                true
+            );
+
+        // validação
         if (is_array($files)) {
+            // pegando todos os arquivos
+            if (current($files) == "Todos") {
+                $files = $this->getFiles(false);
+            }
+
             foreach ($files as $file) {
                 $this->fileNotExists($file);
             }
@@ -225,7 +249,8 @@ class TranslationFilesCommand extends Command
             $this->fileNotExists($files);
             $files = [$files];
         }
-        return $files;
+
+        $this->files = $files;
     }
 
     /**
@@ -234,7 +259,7 @@ class TranslationFilesCommand extends Command
      */
     private function fileNotExists($file)
     {
-        if (!file_exists("{$this->pathBaseLocale}/{$file}") && !file_exists("{$this->pathBase}/{$file}") ) {
+        if (!file_exists("{$this->pathBaseLocale}/{$file}") && !file_exists("{$this->pathBase}/{$file}")) {
             throw new Exception("Sorry, file [ {$file} ] dont exists.");
         }
     }
@@ -247,6 +272,10 @@ class TranslationFilesCommand extends Command
      */
     private function persist($lang, $key, ReversoTranslation $translation, $line, $group): void
     {
+        if (str_contains($group, "*")) {
+            $group = "*";
+        }
+
         $trans = $translation->trans($line);
         if ($trans[ "success" ]) {
             $model = TranslationSolutionEasy::key($key)->group($group);
