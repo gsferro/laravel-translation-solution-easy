@@ -3,14 +3,14 @@
 namespace Gsferro\TranslationSolutionEasy\Console\Commands;
 
 use Exception;
-use Gsferro\TranslationSolutionEasy\Models\TranslationSolutionEasy;
-use Gsferro\TranslationSolutionEasy\Services\ReversoTranslation;
-use Illuminate\Config\Repository;
+use Gsferro\TranslationSolutionEasy\Interfaces\TranslationCommandInterface;
+use Gsferro\TranslationSolutionEasy\Traits\TranslationCommandTrait;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\DB;
 
-class TranslationFilesCommand extends Command
+class TranslationFilesCommand extends Command implements TranslationCommandInterface
 {
+    use TranslationCommandTrait;
+
     /**
      * The name and signature of the console command.
      *
@@ -23,10 +23,7 @@ class TranslationFilesCommand extends Command
      * @var string
      */
     protected $description = 'Translate the values contained within the folders!';
-    /** * @var Repository */
-    private $langsSupport;
-    /** * @var Repository */
-    private $locale;
+
     /**
      * @var string
      */
@@ -35,7 +32,9 @@ class TranslationFilesCommand extends Command
      * @var string
      */
     private $pathBaseLocale;
-    /** * @var array */
+    /**
+     * @var array
+     */
     private $files;
 
     /**
@@ -47,10 +46,9 @@ class TranslationFilesCommand extends Command
     {
         parent::__construct();
 
-        $this->locale         = config('app.locale');
-        $this->langsSupport   = array_keys(config('laravellocalization.supportedLocales'));
         $this->pathBase       = resource_path("/lang");
         $this->pathBaseLocale = "{$this->pathBase}/{$this->locale}";
+        $this->messageFinish  = "gsferro:translate-tables";
     }
 
     /**
@@ -69,77 +67,25 @@ class TranslationFilesCommand extends Command
             if (!is_dir($this->pathBaseLocale)) {
                 throw new Exception("Sorry, dont the folder language [ {$this->locale} ] config in your application.");
             }
+            // validation generic
+            $this->validation();
 
-            // remover lang locale
-            $this->langsSupport = array_diff($this->langsSupport, [$this->locale]);
-
-            // get options lang
-            $lang = $this->option('lang');
-            if (!empty($lang) && in_array($lang, array_keys(config('laravellocalization.supportedLocales')))) {
-                $this->langsSupport = [$lang];
-            }
-
-            if (count($this->langsSupport) == 0) {
-                throw new Exception('Sorry, not language config in your application.');
-            }
-
-            if (count($this->langsSupport) == 1 && in_array($this->locale, $this->langsSupport)) {
-                throw new Exception('Attention! The configured language is already in your application');
-            }
-
-            // get options files
+            /*
+            |---------------------------------------------------
+            | get options files
+            |---------------------------------------------------
+            */
             $this->optionFile();
+
+            /*
+            |---------------------------------------------------
+            | executando tradução
+            |---------------------------------------------------
+            */
+            $this->exec();
         } catch (Exception $e) {
             return $this->comment($e->getMessage());
         }
-
-        // exibindo linguas
-        $this->comment("Language from locale app: [ {$this->locale} ]");
-        $this->comment("Languages that will be translated together: [ " . implode(" | ", $this->langsSupport) . " ]");
-
-        if ((
-                count($this->langsSupport) > 1) &&
-            (!$lang) &&
-            (!$this->confirm('Translate to all languages?', true))
-        ) {
-            $langsSupport       = $this->choice("Translate into what languages",
-                $this->langsSupport,
-                null,
-                count($this->langsSupport),
-                true
-            );
-            $this->langsSupport = (is_array($langsSupport) ? $langsSupport : [$langsSupport]);
-        }
-
-        // executando tradução
-        return $this->exec();
-    }
-
-    private function exec()
-    {
-        $this->line("");
-        $this->line("Total of Languages:");
-        $langsBar = $this->output->createProgressBar(count($this->langsSupport));
-        $langsBar->start();
-
-        try {
-            DB::beginTransaction();
-            foreach ($this->langsSupport as $lang) {
-                $this->execInFiles($lang);
-                $langsBar->advance();
-            }
-            DB::commit();
-            $langsBar->finish();
-            $this->line("");
-            $this->comment("Finish Languages");
-        } catch (Exception $e) {
-            DB::rollBack();
-            return $this->comment("Oops... {$e->getMessage()}");
-        }
-
-        $this->line("");
-        $this->comment('Thanks for using me!');
-        $this->comment("\7");
     }
 
     /**
@@ -158,7 +104,7 @@ class TranslationFilesCommand extends Command
      * @param $lang
      * @throws Exception
      */
-    private function execInFiles($lang)
+    public function execInCommand($lang)
     {
         $this->line('');
         $this->line('');
@@ -179,7 +125,7 @@ class TranslationFilesCommand extends Command
 
         $filesBar->finish();
         $this->line("");
-        $this->comment("Finish files the lang [ {$lang} ]");
+        $this->comment("Finish files in lang [ {$lang} ]");
     }
 
     /**
@@ -197,23 +143,20 @@ class TranslationFilesCommand extends Command
 
         $this->line("");
         $this->line("");
-        $this->comment("Total registres per file [ {$file} ] in lang[ {$lang} ]:");
+        $this->comment("Total registres per file [ {$file} ] in lang [ {$lang} ]:");
         $max = count($rows, COUNT_RECURSIVE);
         $col = $this->output->createProgressBar($max);
-
-        // inicia service de tradução
-        $translation = new ReversoTranslation($this->locale, $lang);
 
         $group = ($file == $this->locale ? "*" : "{$file}");
         foreach ($rows as $key => $line) {
             $col->advance();
             if (is_array($line)) {
                 $group .= ".{$key}";
-                $this->lineIsArray($lang, $line, $translation, $group, $col);
+                $this->lineIsArray($lang, $line, $group, $col);
                 continue;
 
             }
-            $this->persist($lang, $key, $translation, $line, $group);
+            $this->persist($lang, $key, $line, $group);
         }
 
         $col->finish();
@@ -266,48 +209,20 @@ class TranslationFilesCommand extends Command
 
     /**
      * @param $lang
-     * @param $key
-     * @param ReversoTranslation $translation
-     * @param $line
-     */
-    private function persist($lang, $key, ReversoTranslation $translation, $line, $group): void
-    {
-        if (str_contains($group, "*")) {
-            $group = "*";
-        }
-
-        $trans = $translation->trans($line);
-        if ($trans[ "success" ]) {
-            $model = TranslationSolutionEasy::key($key)->group($group);
-            if ($model->exists()) {
-                $text = $model->first()->text;
-            }
-            TranslationSolutionEasy::updateOrCreate([
-                'group' => $group,
-                'key'   => $key,
-            ], [
-                'text' => array_merge($text ?? [], [$lang => $trans[ "translate" ]]),
-            ]);
-        }
-    }
-
-    /**
-     * @param $lang
      * @param array $line
-     * @param ReversoTranslation $translation
      * @param $group
      */
-    private function lineIsArray($lang, array $line, ReversoTranslation $translation, $group, $col): void
+    private function lineIsArray($lang, array $line, $group, $col): void
     {
         foreach ($line as $key => $ln) {
             $col->advance();
             if (is_array($ln)) {
                 $group .= ".{$key}";
-                $this->lineIsArray($lang, $ln, $translation, $group, $col);
+                $this->lineIsArray($lang, $ln, $group, $col);
                 continue;
             }
 
-            $this->persist($lang, $key, $translation, $ln, $group);
+            $this->persist($lang, $key, $ln, $group);
         }
     }
 }

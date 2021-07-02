@@ -156,16 +156,16 @@ class ConfigureSQLiteCommand extends Command
             $this->call('config:clear');
             $this->publishConfiguration();
 
+            $this->line('');
             $this->comment('Then execute the command:');
             $this->line('');
-            $this->comment('<fg=green;bg=white>php artisan gsferro:configure-sqlite-migrate');
-
+            $this->comment('php artisan gsferro:configure-sqlite-migrate');
+            $this->line('');
+            $this->comment('Thanks for using me!');
+            $this->comment("\7");
         } catch (\Exception $e) {
             return $this->error($e->getMessage());
         }
-
-        $this->comment('Thanks for using me!');
-        $this->comment("\7");
     }
 
     /**

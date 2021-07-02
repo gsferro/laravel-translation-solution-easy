@@ -48,6 +48,13 @@ class ConfigureSQLiteMigrateCommand extends Command
             "--path"     => "database/migrations/translation"
         ]);
 
+        $this->line('');
+        $this->comment('Then execute the command:');
+        $this->line('');
+        $this->comment('php artisan gsferro:translate-files');
+        $this->line('');
+        $this->comment('php artisan gsferro:translate-tables');
+        $this->line('');
         $this->comment('Thanks for using me!');
         $this->comment("\7");
     }

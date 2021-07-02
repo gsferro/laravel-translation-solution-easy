@@ -2,31 +2,34 @@
 
 namespace Gsferro\TranslationSolutionEasy\Console\Commands;
 
-use Gsferro\TranslationSolutionEasy\Models\TranslationSolutionEasy;
-use Gsferro\TranslationSolutionEasy\Services\ReversoTranslation;
-use Illuminate\Config\Repository;
+use Exception;
+use Gsferro\TranslationSolutionEasy\Interfaces\TranslationCommandInterface;
+use Gsferro\TranslationSolutionEasy\Traits\TranslationCommandTrait;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
-class TranslationTablesCommand extends Command
+class TranslationTablesCommand extends Command implements TranslationCommandInterface
 {
+    use TranslationCommandTrait;
+
     /**
      * The name and signature of the console command.
      *
      * @var string
      */
-    protected $signature = 'gsferro:translate-tables {--table= : Table name} {--column= : Collumn name}';
+    protected $signature = 'gsferro:translate-tables {--table= : Table name} {--column= : Collumn name}  {--lang= : Language}';
     /**
      * The console command description.
      *
      * @var string
      */
     protected $description = 'Translate the values contained within the database tables!';
-    /** * @var Repository */
-    private $langsSupport;
-    /** * @var Repository */
-    private $locale;
+
+    /**
+     * @var array
+     */
+    private $tables;
 
     /**
      * Create a new command instance.
@@ -37,8 +40,7 @@ class TranslationTablesCommand extends Command
     {
         parent::__construct();
 
-        $this->locale       = config('app.locale');
-        $this->langsSupport = array_keys(config('laravellocalization.supportedLocales'));
+        $this->messageFinish = "gsferro:translate-files";
     }
 
     /**
@@ -48,57 +50,71 @@ class TranslationTablesCommand extends Command
      */
     public function handle()
     {
-        /*
-        |---------------------------------------------------
-        | validation
-        |---------------------------------------------------
-        */
-        if (count($this->langsSupport) == 0) {
-            $this->line("");
-            return $this->error('Sorry, not language config in your application.');
-        }
+        try {
+            /*
+            |---------------------------------------------------
+            | validation
+            |---------------------------------------------------
+            */
+            // validation generic
+            $this->validation();
 
-        if (count($this->langsSupport) == 1 && in_array($this->locale, $this->langsSupport)) {
-            $this->info('Attention! The configured language is already in your application.');
-            if ($this->confirm('Abortion the translation for you set up?!')) {
-                return $this->info('Okay. Abort this!');
-            }
-        }
-
-        /*
-        |---------------------------------------------------
-        | caso passe algum paramentro
-        |---------------------------------------------------
-        */
-        if (!empty($this->option('table')) || !empty($this->option('column'))) {
-            $table = $this->option('table') ?? $this->ask('What is table name?');
-            // validação
-            if ($this->tableDontExist($table)) {
-                $this->line("");
-                return $this->error("Oops, table [ {$table} ] not found.");
+            /*
+            |---------------------------------------------------
+            | caso passe algum paramentro
+            |---------------------------------------------------
+            */
+            if (!empty($this->option('table')) || !empty($this->option('column'))) {
+                return $this->optionInline();
             }
 
-            $column = $this->option('column') ?? $this->ask('What is column name?');
-            if ($this->CollumnDontExist($table, $column)) {
-                $this->line("");
-                return $this->error("Oops, column [ {$column} ]  not found.");
+            /*
+            |---------------------------------------------------
+            | Pegando da configuração
+            |---------------------------------------------------
+            */
+            $tables = config('translationsolutioneasy.translate-tables');
+            if (empty($tables)) {
+                throw new Exception('Oops... Not tables and columns config in translationsolutioneasy.translate-tables.');
             }
 
-            return $this->exec([$table => $column]);
+            $this->tables = $tables;
+
+            /*
+            |---------------------------------------------------
+            | executando tradução
+            |---------------------------------------------------
+            */
+            $this->exec();
+        } catch (\Exception $e) {
+            return $this->comment($e->getMessage());
+        }
+    }
+
+    private function optionInline()
+    {
+        $table = $this->option('table') ?? $this->ask('What is table name');
+        // validação
+        if ($this->tableDontExist($table)) {
+            throw new Exception("Oops, table [ {$table} ] not found.");
         }
 
-        /*
-        |---------------------------------------------------
-        | Pegando da configuração
-        |---------------------------------------------------
-        */
-        $tables = config('translationsolutioneasy.translate-tables');
-        if (empty($tables)) {
-            $this->line("");
-            return $this->error('Oops... Not tables and columns config in translationsolutioneasy.translate-tables.');
+        $collunsChoice = $this->collunsChoice($table);
+        $column        = $this->option('column') ??
+            $this->choice('What is column name',
+                $collunsChoice,
+                null,
+                count($collunsChoice),
+                false
+            );
+
+        if ($this->CollumnDontExist($table, $column)) {
+            throw new Exception("Oops, column [ {$column} ]  not found.");
         }
 
-        return $this->exec($tables);
+        $this->tables = [$table => $column];
+
+        return $this->exec();
     }
 
     private function tableDontExist($table)
@@ -106,92 +122,106 @@ class TranslationTablesCommand extends Command
         return !Schema::hasTable($table);
     }
 
-    private function CollumnDontExist($table, $column)
+    private function collunsChoice($table)
     {
-        if (env('DB_CONNECTION') == 'sqlite') {
-            $columns = DB::select("pragma table_info('{$table}')");
-            return !collect($columns)->contains("name", $column);
-        }
+        $desc    = $this->describleTable($table);
+        $key     = $desc[ "key" ];
+        $columns = $desc[ "columns" ];
 
-        $columns = DB::select("pragma table_info('{$table}')");
-        return !collect($columns)->contains("Field", $column);
+        $choices = [];
+        foreach ($columns as $column) {
+            $choices[] = $column->$key;
+        }
+        return $choices;
     }
 
-    private function exec(array $tables)
+    private function collumnDontExist($table, $column)
     {
-        $this->line("");
-        $this->line("Language from locale app: [ {$this->locale} ]");
-        $this->line("");
-        $this->line("Languages that will be translated together: [ " . implode(" | ", $this->langsSupport) . " ]");
-        $this->line("");
-        $this->line("Total of tables");
-        $bar = $this->output->createProgressBar(count($tables));
-
-        $bar->start();
-
-        try {
-            DB::beginTransaction();
-
-            foreach ($tables as $table => $column) {
-                if (is_array($column)) {
-                    foreach ($column as $col) {
-                        $this->translateAndPersist($col, $table);
-                    }
-                } else {
-                    $this->translateAndPersist($column, $table);
-                }
-
-                $bar->advance();
-            }
-            DB::commit();
-
-            $bar->finish();
-            $this->line("");
-            $this->comment('Thanks for using me!');
-            $this->comment("\7");
-        } catch (\Exception $e) {
-            DB::rollBack();
-            $this->error("Oops... {$e->getMessage()}");
-        }
+        return !in_array($column, $this->collunsChoice($table));
     }
 
     /**
-     * @param array $column
-     * @param $table
+     * @param string $lang
+     * @throws Exception
      */
-    private function translateAndPersist($column, $table)
+    public function execInCommand(string $lang)
+    {
+        $this->line("");
+        $this->line("Total of tables for lang [ $lang ]:");
+        $bar = $this->output->createProgressBar(count($this->tables));
+        $bar->start();
+
+        foreach ($this->tables as $table => $column) {
+            if (is_array($column)) {
+                foreach ($column as $col) {
+                    $this->translateAndPersist($lang, $col, $table);
+                }
+            } else {
+                $this->translateAndPersist($lang, $column, $table);
+            }
+
+            $bar->advance();
+        }
+        $bar->finish();
+        $this->line("");
+        $this->comment("Finish tables in lang [ $lang ]");
+    }
+
+    /**
+     * @param string $lang
+     * @param array $column
+     * @param string $table
+     */
+    private function translateAndPersist(string $lang, $column, string $table)
     {
         // busca os dados
         $rows = DB::select("select {$column} from {$table}");
 
         $this->line("");
         $this->line("");
-        $this->line("Total registres per table [ {$table} ] with column [ {$column} ] ");
+        $this->line("Total registres per table [ {$table} ] with column [ {$column} ] in lang [ $lang ]:");
         $col = $this->output->createProgressBar(count($rows));
+        $col->start();
 
+        collect($rows)->map(function ($row) use ($lang, $column, $col) {
+            // key and translate
+            $key = $row->$column;
 
-        $translation = new ReversoTranslation($this->locale, $this->langsSupport);
-        collect($rows)->map(function ($row) use ($column, $translation, $col) {
-            // translate
-            $key   = $row->$column;
-            $trans = $translation->trans($key);
+            $this->persist($lang, $key, $key);
 
-            if ($trans[ "success" ]) {
-
-                $model = TranslationSolutionEasy::key($key)->group();
-                if ($model->exists()) {
-                    $text = $model->first()->text;
-                }
-                TranslationSolutionEasy::updateOrCreate([
-                    'group' => '*',
-                    'key'   => $key,
-                ], [
-                    'text' => array_merge($text ?? [], $trans[ "translate" ]),
-                ]);
-            }
             $col->advance();
         });
         $col->finish();
         $this->line("");
+        $this->comment("Finish table [ {$table} ] in lang [ $lang ]");
+    }
+
+    /**
+     * @param $table
+     * @return array
+     */
+    private function describleTable($table): array
+    {
+        switch (env('DB_CONNECTION')) {
+            case 'sqlite':
+                $columns = DB::select("pragma table_info('{$table}')");
+                $key     = "name";
+            break;
+
+            case 'sqlsrv':
+                $columns = DB::select("EXEC sp_columns {$table}");
+                $key     = "COLUMN_NAME";
+            break;
+
+            default:
+                $columns = DB::select("DESC {$table}");
+                $key     = "Field";
+            break;
+        }
+
+        return [
+            "key"     => $key,
+            "columns" => $columns,
+        ];
     }
 }
