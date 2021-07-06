@@ -113,11 +113,16 @@ php artisan vendor:publish --provider="Gsferro\TranslationSolutionEasy\Providers
     ],
     ```
 
-1.  Execute o comando via artisan, passe os paramentros caso queira rodar somente em uma única tabela
+1.  Execute o comando via artisan, passe os paramentros caso queira rodar somente em uma única tabela/coluna (inline)
     ```php 
     php artisan gsferro:translate-tables [--table= : Table name] [--column= : Collumn name]  [--lang= : Language]
     ```
-    
+
+1.  Nas Models:
+    1. Coloque a interface `TranslationColumnsInterface`     
+    1. Coloque a Trait `TranslationColumnsTrait`
+    1. Caso não tenha configurado o item 1 (inline), sete o atributo `public $translationColumns = ['<name-column1>', ...]` 
+
 ### Tradução dos arquivos
 
 1.  Execute o comando via artisan, passe os paramentros caso queira rodar somente em um único arquivo ou lang 
