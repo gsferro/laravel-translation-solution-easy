@@ -46,6 +46,7 @@ class TranslationFilesCommand extends Command implements TranslationCommandInter
     {
         parent::__construct();
 
+        $this->setLangs();
         $this->pathBase       = resource_path("/lang");
         $this->pathBaseLocale = "{$this->pathBase}/{$this->locale}";
         $this->messageFinish  = "gsferro:translate-tables";

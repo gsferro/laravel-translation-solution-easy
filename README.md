@@ -116,7 +116,7 @@ php artisan vendor:publish --provider="Gsferro\TranslationSolutionEasy\Providers
 
 1.  Execute o comando via artisan, passe os paramentros caso queira rodar somente em uma única tabela
     ```php 
-    php artisan gsferro:translate-tables [--table= : Table name] [--column= : Collumn name]
+    php artisan gsferro:translate-tables [--table= : Table name] [--column= : Collumn name]  [--lang= : Language]
     ```
     
 ### Tradução dos arquivos

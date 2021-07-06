@@ -40,6 +40,7 @@ class TranslationTablesCommand extends Command implements TranslationCommandInte
     {
         parent::__construct();
 
+        $this->setLangs();
         $this->messageFinish = "gsferro:translate-files";
     }
 

@@ -29,8 +29,6 @@ trait TranslationCommandTrait
      */
     private function validation()
     {
-        $this->setLangs();
-
         // remover lang locale
         $this->langsSupport = array_diff($this->langsSupport, [$this->locale]);
 
