@@ -2,7 +2,6 @@
 
 Uma solução completa para i18n que contempla as 3 etapas básicas:
 
-
 1.  Tradução de strings fixos (views e controllers)
 
     1. Para tudo que for estatico: botoes, label, validations e etc
@@ -17,11 +16,11 @@ Uma solução completa para i18n que contempla as 3 etapas básicas:
 1.  Gerenciamento do locate dentro da app pelo usuário na url
 
 1.  Tradução do banco de dados
-    1.  Sessão: Use SQLite, configurando de forma simples com alguns passos rodando 
+    1.  Sessão: [Use SQLite](#use-sqlite), configurando de forma simples com alguns passos rodando 
         - `php artisan gsferro:configure-sqlite` 
-    1.  Sessão: Tradução do Banco, Tabelas de configuração traduzidas tanto única quanto múltiplas em `config/translationsolutioneasy`.
+    1.  Sessão: [Tradução do Banco](#tradução-do-banco), Tabelas de configuração traduzidas tanto única quanto múltiplas em `config/translationsolutioneasy`.
         - `php artisan gsferro:translate-tables`
-    1.  Traduzir arquivos de langs usando command como é feito no banco    
+    1.  Sessão: [Tradução dos arquivos](#tradução-dos-arquivos) de langs usando command como é feito no banco    
         - `php artisan gsferro:translate-files`
     
     - `TODO` 
@@ -56,7 +55,7 @@ php artisan vendor:publish --provider="Gsferro\TranslationSolutionEasy\Providers
 
 ### Configurações de uso
 
-1.  Caso não Use SQLite: `php artisan migrate --path=database/migrations/translation` 
+1.  Caso não [Use SQLite](#use-sqlite): `php artisan migrate --path=database/migrations/translation` 
 
 1.  No arquivo base de html deve ser colocado:
     ```html
