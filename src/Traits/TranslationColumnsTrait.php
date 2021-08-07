@@ -13,26 +13,30 @@ trait TranslationColumnsTrait
     {
         $value = parent::getAttribute($key);
 
-        if ($this->existTrans($key)) {
-            return __("{$value}");
-        }
-
-        return $value;
+        return ($this->existTrans($key)
+            ? __("{$value}")
+            : $value
+        );
     }
 
     /**
-     * Caso tenha sido configurado dentro de translationsolutioneasy com o nome da tabela e a coluna
+     * Verifica se a tabela foi configurada usando o nome da tabela e se a coluna invoca foi colocada para traduzir
      *
      * @param $key
      * @return bool
      */
     private function isConfigTable($key): bool
     {
-        $table = $this->getTable();
+        $table  = $this->getTable();
+        $config = config('translationsolutioneasy.translate-tables');
         return (
-            !empty(config('translationsolutioneasy.translate-tables')) &&
-            array_key_exists($table, config('translationsolutioneasy.translate-tables')) &&
-            in_array($key, config('translationsolutioneasy.translate-tables')[$table])
+            // tbl esta configurada
+            array_key_exists($table, $config) && (
+                // verifica o campo tanto único, como string, quanto em array
+                is_array($config[ $table ])
+                    ? in_array($key, $config[$table])
+                    : $config[$table] == $key
+            )
         );
     }
 
@@ -56,6 +60,17 @@ trait TranslationColumnsTrait
      */
     private function existTrans($key): bool
     {
-        return $this->isConfigTable($key) || $this->isSetInModel($key);
+        return $this->existsConfig() && (
+                $this->isConfigTable($key) || $this->isSetInModel($key)
+            );
+    }
+
+    /**
+     * verifica se existe configração
+     * @return bool
+     */
+    private function existsConfig(): bool
+    {
+        return !empty(config('translationsolutioneasy.translate-tables'));
     }
 }
