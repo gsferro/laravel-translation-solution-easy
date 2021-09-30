@@ -187,8 +187,9 @@ class TranslationTablesCommand extends Command implements TranslationCommandInte
         collect($rows)->map(function ($row) use ($lang, $column, $col) {
             // key and translate
             $key = $row->$column;
-
-            $this->persist($lang, $key, $key);
+            if (!is_null($key)) {
+                $this->persist($lang, $key, $key);
+            }
 
             $col->advance();
         });
