@@ -198,7 +198,7 @@ php artisan vendor:publish --provider="Gsferro\TranslationSolutionEasy\Providers
 * Option `--force`: 
   - Add na v1.3.0, por default é false, ou seja, só ira buscar uma tradução caso não exista para a lingua escolhida, diminuindo substancialmente o tempo; 
   - Caso coloque como true, executara para todos, pode demorar horas dependendo do tamanho do arquivo ou tabela.  
-
+* O limite para cada tradução é de 3k caracteres
 * Testing:
     - https://github.com/ARCANEDEV/Localization/issues/113 (working)
     - https://github.com/mcamara/laravel-localization#testing (not working)
