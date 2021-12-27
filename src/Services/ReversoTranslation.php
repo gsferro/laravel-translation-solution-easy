@@ -108,7 +108,7 @@ class ReversoTranslation
     private function multiTrans()
     {
         $trans = [];
-        foreach ($this->to as $i => $to) {
+        foreach ($this->to as $to) {
             $trans[ $to ] = $this->api(reversoTranslationLangsConvert($to));
         }
         return $this->success($trans);
@@ -123,6 +123,10 @@ class ReversoTranslation
     {
         if ($this->langFrom == $langTo) {
             return $this->text;
+        }
+
+        if (strlen($this->text) > 3000) {
+            throw new Exception("length the text is too longer. limit 3000 caracteres.");
         }
 
         $curl = curl_init();
