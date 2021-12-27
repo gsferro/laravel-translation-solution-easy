@@ -17,6 +17,10 @@ trait TranslationCommandTrait
     private $locale;
     /** * @var string */
     private $messageFinish;
+    /** * @var bool */
+    private $force = false;
+    /** * @var array */
+    private $timesExec = [];
 
     private function setLangs()
     {
@@ -57,21 +61,15 @@ trait TranslationCommandTrait
      */
     private function persist(string $lang, string $key, string $translate, string $group = "*"): void
     {
-        if (str_contains($group, "*")) {
+        if (is_int(strpos($group, "*"))) {
             $group = "*";
         }
 
-        $trans = $this->translation->trans($translate);
-        if ($trans[ "success" ]) {
-            $text = $this->textExists($key, $group);
-
-            TranslationSolutionEasy::updateOrCreate([
-                'group' => $group,
-                'key'   => $key,
-            ], [
-                'text' => array_merge($text, [$lang => $trans[ "translate" ]]),
-            ]);
-        }
+        $text = $this->textExists($key, $group);
+        $this->force
+            ? $this->persistInModel($translate, $key, $group, $lang, $text)
+            : $this->persistIfNotExists($translate, $key, $group, $lang, $text)
+        ;
     }
 
     /**
@@ -96,6 +94,8 @@ trait TranslationCommandTrait
      */
     public function exec()
     {
+        $this->getTimeNow();
+
         $this->showLangs();
 
         $this->line("");
@@ -126,6 +126,8 @@ trait TranslationCommandTrait
         }
 
         $this->messageFinish();
+        $this->getTimeNow(false);
+        $this->line("Time: {$this->elapsedTime()} seconds, Memory: {$this->memoryUsage()} MB");
     }
 
     private function showLangs()
@@ -174,5 +176,78 @@ trait TranslationCommandTrait
 
         $this->comment('Thanks for using me!');
         $this->comment("\7");
+    }
+
+    /**
+     * exec translate and persist in model
+     *
+     * @param string $translate
+     * @param string $key
+     * @param string $group
+     * @param string $lang
+     * @param array $text
+     */
+    private function persistInModel(string $translate, string $key, string $group, string $lang, array $text): void
+    {
+        $trans = $this->translation->trans($translate);
+        if ($trans[ "success" ]) {
+            TranslationSolutionEasy::updateOrCreate([
+                'group' => $group,
+                'key'   => $key,
+            ], [
+                'text' => array_merge($text, [$lang => $trans[ "translate" ]]),
+            ]);
+        }
+    }
+
+    /**
+     * verify the lang exists in text (column in Model TranslationSolutionEasy)
+     * if true, exec persistInModel
+     *
+     * @param string $translate
+     * @param string $key
+     * @param string $group
+     * @param string $lang
+     * @param array $text
+     */
+    private function persistIfNotExists(string $translate, string $key, string $group, string $lang, array $text): void
+    {
+        if (!array_key_exists("{$lang}", $text)) {
+            $this->persistInModel($translate, $key, $group, $lang, $text);
+        }
+    }
+
+    /**
+     * capture microtime
+     *
+     * @param bool $star
+     */
+    private function getTimeNow(bool $star = true): void
+    {
+        list($usec, $sec) = explode(' ', microtime());
+        $this->timesExec[ $star ? "start" : "end"] = (float) $sec + (float) $usec;
+    }
+
+    /**
+     * Calcule time between start and end by getTimeNow
+     *
+     * @return float
+     */
+    private function elapsedTime(): float
+    {
+        return (!empty($this->timesExec)
+            ? round($this->timesExec["end"] - $this->timesExec["start"], 2)
+            : 0.00
+        );
+    }
+
+    /**
+     * get totaly memory using in process
+     *
+     * @return string
+     */
+    private function memoryUsage(): string
+    {
+        return round(((memory_get_peak_usage(true) / 1024) / 1024), 2);
     }
 }
