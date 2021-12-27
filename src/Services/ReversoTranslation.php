@@ -128,7 +128,7 @@ class ReversoTranslation
         $curl = curl_init();
 
         curl_setopt_array($curl, array(
-            CURLOPT_URL            => "https://api.reverso.net/translate/v1/translation",
+            CURLOPT_URL            => "https://api.reverso.net/translate/v1/translation", // TODO mover para config
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_ENCODING       => "",
             CURLOPT_MAXREDIRS      => 10,
@@ -164,9 +164,10 @@ class ReversoTranslation
             "input"   => $this->text,
             "from"    => $this->langFrom,
             "to"      => $langTo,
+            // TODO mover para config
             "format"  => "text",
             "options" => [
-                "origin"            => "reversodesktop",
+                "origin"            => "translation.web", // reversodesktop → 27/12/21 passou a devolver as traduções invertidas
                 "sentenceSplitter"  => false,
                 "contextResults"    => false,
                 "languageDetection" => false
