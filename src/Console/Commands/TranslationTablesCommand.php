@@ -18,7 +18,7 @@ class TranslationTablesCommand extends Command implements TranslationCommandInte
      *
      * @var string
      */
-    protected $signature = 'gsferro:translate-tables {--table= : Table name} {--column= : Collumn name}  {--lang= : Language}';
+    protected $signature = 'gsferro:translate-tables {--table= : Table name} {--column= : Collumn name}  {--lang= : Language} {--force}';
     /**
      * The console command description.
      *

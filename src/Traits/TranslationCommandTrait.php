@@ -49,6 +49,8 @@ trait TranslationCommandTrait
         if (count($this->langsSupport) == 1 && in_array($this->locale, $this->langsSupport)) {
             throw new Exception('Attention! The configured language is already in your application');
         }
+
+        $this->force = $this->option('force');
     }
 
     /**
