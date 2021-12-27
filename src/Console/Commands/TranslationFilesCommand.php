@@ -16,7 +16,7 @@ class TranslationFilesCommand extends Command implements TranslationCommandInter
      *
      * @var string
      */
-    protected $signature = 'gsferro:translate-files {--file= : File name} {--lang= : Language} {--force}';
+    protected $signature = 'gsferro:translate-files {--file= : File name} {--lang= : Language} {--force : default false, execute translate if no exists}';
     /**
      * The console command description.
      *

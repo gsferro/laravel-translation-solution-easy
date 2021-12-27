@@ -161,7 +161,7 @@ php artisan vendor:publish --provider="Gsferro\TranslationSolutionEasy\Providers
 
 1.  Execute o comando via artisan, passe os paramentros caso queira rodar somente em um único arquivo ou lang
     ```bash
-    php artisan gsferro:translate-files [--file= : File name] [--lang= : Language]
+    php artisan gsferro:translate-files [--file= : File name] [--lang= : Language] [--force :  : default false, execute translate if no exists]
     ```
 
 ### Tradução do Banco de Dados
@@ -188,13 +188,16 @@ php artisan vendor:publish --provider="Gsferro\TranslationSolutionEasy\Providers
     
 1.  Execute o comando via artisan, passe os paramentos caso queira rodar somente numa única tabela/coluna (inline)
     ```bash
-    php artisan gsferro:translate-tables [--table= : Table name] [--column= : Collumn name]  [--lang= : Language]
+    php artisan gsferro:translate-tables [--table= : Table name] [--column= : Collumn name]  [--lang= : Language] [--force :  : default false, execute translate if no exists]
     ```
 
 - `TODO`
     - Ter a opção de passar a model e pegar as informações direto dela, assim é viável fazer traduções em multiplas conexões de banco de dados.
     
 ### Informações Adicionais
+* Option `--force`: 
+  - Add na v1.3.0, por default é false, ou seja, só ira buscar uma tradução caso não exista para a lingua escolhida, diminuindo substancialmente o tempo; 
+  - Caso coloque como true, executara para todos, pode demorar horas dependendo do tamanho do arquivo ou tabela.  
 
 * Testing:
     - https://github.com/ARCANEDEV/Localization/issues/113 (working)
