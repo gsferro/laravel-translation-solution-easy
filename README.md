@@ -133,6 +133,10 @@ php artisan vendor:publish --provider="Gsferro\TranslationSolutionEasy\Providers
     ```bash
     php artisan migrate --path=database/migrations/translation
     ```
+    - Caso use uma outra conexão:
+        ```bash
+        php artisan migrate --path=database/migrations/translation --database=<outra-conexão>
+        ```
 
 1.  Acesse `config/laravellocalization` e sete quais linguas a sua aplicação irá dar suporte
     - default:
@@ -194,7 +198,14 @@ php artisan vendor:publish --provider="Gsferro\TranslationSolutionEasy\Providers
 - `TODO`
     - Ter a opção de passar a model e pegar as informações direto dela, assim é viável fazer traduções em multiplas conexões de banco de dados.
     
-### Informações Adicionais
+### Informações Adicionais / Importantes
+* **Atenções ao escolher o SGBD que for usado para a tradução, dependendo da escolha será necessário alterar o migrate gerado ao publicar este pacote**:
+  - `sqlite`: 
+    - Tem uma limitação de tamanho de `varchar` (string no migrate) de 500 caracteres usado no campo `key`;
+  - `sql server`:
+    - Não recomenda que seja usado o campo do tipo `text`, pois em alguma versão ele sera descontinuado, o limite atual do varchar é 8k;
+  - o campo `key` esta como string, ou seja, pela configuração do laravel, tera o length de 191, conforme o seu projeto, talvez seja necessário aumentar;
+  
 * Option `--force`: 
   - Add na v1.3.0, por default é false, ou seja, só ira buscar uma tradução caso não exista para a lingua escolhida, diminuindo substancialmente o tempo; 
   - Caso coloque como true, executara para todos, pode demorar horas dependendo do tamanho do arquivo ou tabela.  
